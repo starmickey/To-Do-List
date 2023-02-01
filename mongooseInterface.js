@@ -6,9 +6,9 @@ const mongoose = require("mongoose");
 connectMongoose().catch(err => console.log(err));
 
 async function connectMongoose() {
-  const DATABASE_NAME = "todolistDB";
-  mongoose.set("strictQuery", false);
-  await mongoose.connect('mongodb://127.0.0.1:27017/' + DATABASE_NAME);
+    const DATABASE_NAME = "todolistDB";
+    mongoose.set("strictQuery", false);
+    await mongoose.connect('mongodb://127.0.0.1:27017/' + DATABASE_NAME);
 }
 
 
@@ -25,93 +25,122 @@ const ListType = new mongoose.model('ListType', listTypeSchema);
 
 
 const listSchema = new mongoose.Schema({
-  name: {
-    type: String, 
-    required: true
-  },
-  date: Date,
-  listType: {
-    type: listTypeSchema,
-    required: true
-  }
+    name: {
+        type: String,
+        required: true
+    },
+    date: Date,
+    listType: {
+        type: listTypeSchema,
+        required: true
+    }
 });
 
 const List = new mongoose.model('List', listSchema);
 
 
 const itemSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true
-  },
-  checked: {
-    type: Boolean,
-    default: false
-  },
-  list: {
-    type: listSchema,
-    required: true
-  }
+    name: {
+        type: String,
+        required: true
+    },
+    checked: {
+        type: Boolean,
+        default: false
+    },
+    list: {
+        type: listSchema,
+        required: true
+    }
 });
 
 const Item = new mongoose.model('Item', itemSchema);
 
 
 
-/* ===== EXPORT OPERATIONS ===== */
+/* ==== CREATE DTO CONSTRUCTORS AND EXPORTS ==== */
 
-exports.addItemToList = function (itemName, listName) {
-    
-    List.findOne({name: listName}, function (err, list) {
-        if (err) {
-            console.log(err);
-        } else {
-            const item = new Item({name: itemName, list: list});
-            item.save();
-            console.log("new item created: " + item.name + " list: " + item.list.name);
-        }
-    });
-
+class ItemDTO {
+    constructor(id, name, checked) {
+        this.id = String(id);
+        this.name = String(name);
+        this.checked = Boolean(checked);
+    }
 }
 
+exports.ItemDTO = ItemDTO;
 
-exports.createDateList = function (date) {
 
-    ListType.findOne({name: 'dayList'}, function (err, listTypeFound) {
-        if (err) {
-            console.log(err);
-        } else {
-            const list = new List({name: getStringDate(date), date: date, listType: listTypeFound});
-            list.save();
-            console.log("List created: " + list.name);
-        }
-    });
 
+class ListDTO {
+    constructor(id, name, date, listType, items) {
+        this.id = String(id);
+        this.name = String(name);
+        this.date = date;
+        this.listType = String(listType);
+        this.items = items;
+    }
 }
 
-exports.createPersonalList = function (listName) {
+exports.ListDTO = ListDTO;
 
-    ListType.findOne({name: 'personalList'}, function (err, listTypeFound) {
-        if (err) {
-            console.log(err);
-        } else {
-            const list = new List({name: listName, listType: listTypeFound});
-            list.save();
-            console.log("List created: " + list.name);
-        }
+
+class ListTypeDTO {
+    constructor(id, name) {
+        this.id = String(id);
+        this.name = String(name);
+    }
+}
+
+exports.ListTypeDTO = ListTypeDTO;
+
+
+
+/* ===== DATABASE CRUD OPERATIONS ===== */
+
+exports.getListByName = function (listName) {
+
+    let listDTO;
+    let itemsDTO = [];
+
+    return new Promise((res, rej) => {
+        List.findOne({ name: listName }, function (err, list) {
+            if (err) {
+                rej(err);
+            } else {
+                const itemPromise = new Promise((resolve, reject) => {
+                    Item.find({ list: list }, function (error, items) {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            items.forEach(item => {
+                                itemsDTO.push(new ItemDTO(item.id, item.name, item.checked));
+                            });
+                        }
+
+                        resolve(itemsDTO);
+                    });
+                });
+
+                itemPromise.then(function (itemsDTO) {
+                    listDTO = new ListDTO(list.id, list.name, list.date, list.listType.name, itemsDTO);  
+                    res(listDTO);
+                });
+            }
+
+        });
     });
-
 }
 
 
 exports.getStringDate = function (date) {
 
     const options = {
-      weekday: "long",
-      day: "numeric",
-      month: "long"
+        weekday: "long",
+        day: "numeric",
+        month: "long"
     };
-  
+
     return date.toLocaleDateString("en-US", options);
 
 };
@@ -131,3 +160,9 @@ exports.getStringDate = function (date) {
 }); */
 
 // createDateList(new Date());
+
+// let listDTOsample = getListByName("Wednesday, February 1");
+
+// listDTOsample.then(function (value) {
+//     console.log(value);
+// })
