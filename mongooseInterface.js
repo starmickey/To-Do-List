@@ -98,7 +98,7 @@ exports.ListTypeDTO = ListTypeDTO;
 
 /* ===== DATABASE CRUD OPERATIONS ===== */
 
-exports.getListByName = function (listName) {
+getListByName = function (listName) {
 
     let listDTO;
     let itemsDTO = [];
@@ -133,7 +133,28 @@ exports.getListByName = function (listName) {
 }
 
 
-exports.getStringDate = function (date) {
+saveList = function(listDTO){
+    ListType.findOne({name: listDTO.listType}, function (err, listType) {
+        if(err){
+            console.log(err);
+        } else {
+            const list = new List({name: listDTO.name, date: listDTO.date, listType: listType});
+            Promise.all([list.save()]).then(function (){
+                console.log('list saved: ' + list.name);
+
+                listDTO.items.forEach(itemDTO => {
+                    const item = new Item ({name: itemDTO.name, ckecked: itemDTO.checked, list: list});
+                    item.save();
+                    console.log("Item saved: " + item.name);
+                });
+            });
+        }
+    });
+}
+
+
+
+getStringDate = function (date) {
 
     const options = {
         weekday: "long",
@@ -144,6 +165,7 @@ exports.getStringDate = function (date) {
     return date.toLocaleDateString("en-US", options);
 
 };
+
 
 
 
@@ -166,3 +188,11 @@ exports.getStringDate = function (date) {
 // listDTOsample.then(function (value) {
 //     console.log(value);
 // })
+/* 
+const today = new Date();
+const items = [
+    new ItemDTO('', 'get lists function', true),
+    new ItemDTO('', 'save lists function', false),
+];
+const listDTO = new ListDTO("", getStringDate(today), today, 'dayList', items);
+saveList(listDTO); */
