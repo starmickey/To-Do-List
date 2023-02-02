@@ -104,9 +104,12 @@ getListByName = function (listName) {
     let itemsDTO = [];
 
     return new Promise((res, rej) => {
+       
         List.findOne({ name: listName }, function (err, list) {
             if (err) {
                 rej(err);
+            } else if(list === null) {
+                rej("list " + listName + " not found");
             } else {
                 const itemPromise = new Promise((resolve, reject) => {
                     Item.find({ list: list }, function (error, items) {
@@ -123,32 +126,57 @@ getListByName = function (listName) {
                 });
 
                 itemPromise.then(function (itemsDTO) {
-                    listDTO = new ListDTO(list.id, list.name, list.date, list.listType.name, itemsDTO);  
+                    listDTO = new ListDTO(list.id, list.name, list.date, list.listType.name, itemsDTO);
                     res(listDTO);
                 });
             }
-
         });
+
     });
 }
 
 
-saveList = function(listDTO){
-    ListType.findOne({name: listDTO.listType}, function (err, listType) {
-        if(err){
-            console.log(err);
-        } else {
-            const list = new List({name: listDTO.name, date: listDTO.date, listType: listType});
-            Promise.all([list.save()]).then(function (){
-                console.log('list saved: ' + list.name);
+saveList = function (listDTO) {
+    return new Promise((resolve, reject) => {
 
-                listDTO.items.forEach(itemDTO => {
-                    const item = new Item ({name: itemDTO.name, ckecked: itemDTO.checked, list: list});
-                    item.save();
-                    console.log("Item saved: " + item.name);
+        ListType.findOne({ name: listDTO.listType }, function (err, listType) {
+            if (err) {
+                reject(err);
+            } else if (listType === null) {
+                reject("list type " + listDTO.listType + " not found.");
+            } else {
+                const list = new List({ name: listDTO.name, date: listDTO.date, listType: listType });
+                Promise.all([list.save()]).then(function () {
+                    console.log('list saved: ' + list.name);
+    
+                    listDTO.items.forEach(itemDTO => {
+                        const item = new Item({ name: itemDTO.name, ckecked: itemDTO.checked, list: list });
+                        item.save();
+                        resolve("Item saved: " + item.name);
+                    });
                 });
-            });
-        }
+            }
+        });
+        
+    })
+}
+
+
+addItemToList = function (listDTO, itemDTO) {
+    return new Promise((resolve, reject) => {
+        
+        List.findOne({ _id: listDTO.id }, function (err, list) {
+            if (err) {
+                reject(err);
+            } else if (list === null) {
+                reject('List ' + listDTO.name + ' not found.');
+            } else {
+                const item = new Item({name: itemDTO.name, ckecked: itemDTO.checked, list: list});
+                item.save();
+                resolve('Item saved: ' + item.name);
+            }
+        })
+
     });
 }
 
@@ -171,8 +199,6 @@ getStringDate = function (date) {
 
 /* TEST TRANSACTIONS */
 
-// addItemToList("Buy food", getStringDate(new Date()));
-
 /* List.findOne({name: getStringDate(new Date())}, function (err, list) {
     if (err) {
         console.log(err);
@@ -181,13 +207,15 @@ getStringDate = function (date) {
     }
 }); */
 
-// createDateList(new Date());
 
 // let listDTOsample = getListByName("Wednesday, February 1");
 
 // listDTOsample.then(function (value) {
-//     console.log(value);
+//     const itemDTO = new ItemDTO('', 'create item dto function', false);
+//     addItemToList(value, itemDTO);
+
 // })
+
 /* 
 const today = new Date();
 const items = [
