@@ -131,7 +131,7 @@ exports.createItemDTO = function (name) {
 
 /* ===== DATABASE CRUD OPERATIONS ===== */
 
-getListByName = function (listName) {
+exports.getListByName = function (listName) {
 
     let listDTO;
     let itemsDTO = [];
@@ -144,6 +144,7 @@ getListByName = function (listName) {
                 rej(err);
 
             } else if (lists.length === 0) {
+                console.log("list " + listName + " not found");
                 rej("list " + listName + " not found");
 
             } else {
@@ -196,13 +197,18 @@ getListByName = function (listName) {
 
 exports.saveList = function (listDTO) {
 
+    console.log('saving list');
+
     if (listDTO.status === DTOStatus.new) {
+        console.log('creating list');
         createList(listDTO);
 
     } else if (listDTO.status === DTOStatus.modified) {
+        console.log('modifying list');
         modifyList(listDTO);
 
     } else if (listDTO.status === DTOStatus.removed) {
+        console.log('removing list');
         removeList(listDTO);
     }
 
@@ -354,7 +360,6 @@ removeList = function (listDTO) {
 }
 
 
-exports.getStringDate = getStringDate;
 function getStringDate(date) {
 
     const options = {
@@ -366,6 +371,9 @@ function getStringDate(date) {
     return date.toLocaleDateString("en-US", options);
 
 };
+
+exports.getStringDate = getStringDate;
+
 
 
 

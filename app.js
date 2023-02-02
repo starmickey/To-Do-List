@@ -1,48 +1,96 @@
-//jshint esversion:6
+/*  ======== REQUIRE MODULES ======== */
 
 const express = require("express");
 const bodyParser = require("body-parser");
-const date = require(__dirname + "/date.js");
+const { DTOStatus } = require("./mongooseInterface");
+// const date = require(__dirname + "/date.js");
+const mongoose = require(__dirname + "/mongooseInterface.js");
+
+
+
+/* ======= CONFIG EXPRESS APP ======= */
 
 const app = express();
 
 app.set('view engine', 'ejs');
 
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
-const items = ["Buy Food", "Cook Food", "Eat Food"];
-const workItems = [];
 
-app.get("/", function(req, res) {
+/* AUXILIARY VARS AND METHODS */
 
-const day = date.getDate();
 
-  res.render("list", {listTitle: day, newListItems: items});
+// const AppStatus = {
+//   start: 0,
+//   updated: 1, 
+//   saving_changes: 2
+// }
+
+let list;
+let itemsNames = [];
+
+
+function refreshList(reqListName) {
+
+  return new Promise((resolve, reject) => {
+
+    if (list === undefined || list.name !== reqListName) {
+
+      mongoose.getListByName(reqListName).then(function (foundList) {
+
+          list = foundList;
+          itemsNames = [];
+
+          list.items.forEach(item => {
+            itemsNames.push(item.name);
+          });
+
+          resolve('list refreshed');
+
+      });
+
+    } else {
+      resolve("list wash't refreshed");
+    }
+
+  })
+
+
+}
+
+/* ====== APP EVENTS' HANDLERS ====== */
+
+app.get("/", function (req, res) {
+
+  const reqListName = mongoose.getStringDate(new Date());
+
+  Promise.all([refreshList(reqListName)]).then(function (message) {
+    res.render("list", { listTitle: list.name, newListItems: itemsNames });
+  });
 
 });
 
-app.post("/", function(req, res){
+app.post("/", function (req, res) {
 
-  const item = req.body.newItem;
+  // const item = req.body.newItem;
+  itemsNames.push(req.body.newItem);
+  const newItem = mongoose.createItemDTO(req.body.newItem);
+  list.items.push(newItem);
+  list.status = DTOStatus.modified;
+  mongoose.saveList(list);
 
-  if (req.body.list === "Work") {
-    workItems.push(item);
-    res.redirect("/work");
-  } else {
-    items.push(item);
-    res.redirect("/");
-  }
+  res.redirect("/");
 });
 
-app.get("/work", function(req,res){
-  res.render("list", {listTitle: "Work List", newListItems: workItems});
+app.get("/work", function (req, res) {
+  res.render("list", { listTitle: "Work List", newListItems: workItems });
 });
 
-app.get("/about", function(req, res){
+app.get("/about", function (req, res) {
   res.render("about");
 });
 
-app.listen(3000, function() {
+app.listen(3000, function () {
   console.log("Server started on port 3000");
 });
