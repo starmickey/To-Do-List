@@ -116,20 +116,28 @@ getListByName = function (listName) {
     let itemsDTO = [];
 
     return new Promise((res, rej) => {
-       
+
         List.findOne({ name: listName }, function (err, list) {
+
             if (err) {
                 rej(err);
-            } else if(list === null) {
+
+            } else if (list === null) {
                 rej("list " + listName + " not found");
+
             } else {
+
                 const itemPromise = new Promise((resolve, reject) => {
+
                     Item.find({ list: list }, function (error, items) {
                         if (error) {
                             reject(error);
+
                         } else {
                             items.forEach(item => {
-                                itemsDTO.push(new ItemDTO(item.id, item.name, item.checked));
+                                if (item.rmDate === null) {
+                                    itemsDTO.push(new ItemDTO(item.id, item.name, item.checked));
+                                }
                             });
                         }
 
@@ -149,23 +157,42 @@ getListByName = function (listName) {
 
 
 saveList = function (listDTO) {
+
     return new Promise((resolve, reject) => {
 
-        ListType.findOne({ name: listDTO.listType }, function (err, listType) {
+        ListType.find({ name: listDTO.listType }, function (err, listTypes) {
+
             if (err) {
                 reject(err);
-            } else if (listType === null) {
+
+            } else if (listTypes.length === 0) {
                 reject("list type " + listDTO.listType + " not found.");
+
             } else {
+                let listType;
+
+                listTypes.forEach(lt => {
+                    if (lt.rmDate === null) {
+                        listType = lt;
+                    }
+                });
+
+                if (listType === null) {
+                    reject("list type " + listDTO.listType + " not found.");
+                }
+
                 const list = new List({ name: listDTO.name, date: listDTO.date, listType: listType });
+
                 Promise.all([list.save()]).then(function () {
                     console.log('list saved: ' + list.name);
-    
+                    
                     listDTO.items.forEach(itemDTO => {
                         const item = new Item({ name: itemDTO.name, ckecked: itemDTO.checked, list: list });
                         item.save();
-                        resolve("Item saved: " + item.name);
+                        console.log("Item saved: " + item.name);
                     });
+
+                    resolve('list saved: ' + list.name);
                 });
             }
         });
@@ -176,14 +203,14 @@ saveList = function (listDTO) {
 
 addItemToList = function (listDTO, itemDTO) {
     return new Promise((resolve, reject) => {
-        
+
         List.findOne({ _id: listDTO.id }, function (err, list) {
             if (err) {
                 reject(err);
             } else if (list === null) {
                 reject('List ' + listDTO.name + ' not found.');
             } else {
-                const item = new Item({name: itemDTO.name, ckecked: itemDTO.checked, list: list});
+                const item = new Item({ name: itemDTO.name, ckecked: itemDTO.checked, list: list });
                 item.save();
                 resolve('Item saved: ' + item.name);
             }
@@ -194,14 +221,14 @@ addItemToList = function (listDTO, itemDTO) {
 
 
 removeItemFromList = function (itemDTO) {
-    
+
     return new Promise((resolve, reject) => {
-        Item.findOne({ _id: itemDTO.id }, function(err, item){
+        Item.findOne({ _id: itemDTO.id }, function (err, item) {
             if (err) {
                 reject(err);
             } else if (item === null) {
                 reject('item ' + itemDTO.name + ' not found.');
-            } else if (item.rmDate !== null){
+            } else if (item.rmDate !== null) {
                 reject('item ' + item.name + ' was already removed.');
             } else {
                 item.rmDate = new Date();
@@ -210,7 +237,7 @@ removeItemFromList = function (itemDTO) {
                 });
             }
         });
-        
+
     })
 
 }
@@ -243,22 +270,26 @@ getStringDate = function (date) {
 }); */
 
 
-let listDTOsample = getListByName("Wednesday, February 1");
+// let listDTOsample = getListByName("Wednesday, February 1");
+// let listDTOsample = getListByName(getStringDate(new Date()));
 
-listDTOsample.then(function (value) {
-    // const itemDTO = new ItemDTO('', 'vanilla2', false);
+// listDTOsample.then(function (value) {
+    // console.log(value);
+    // const itemDTO = new ItemDTO('', 'vanilla3', false);
     // addItemToList(value, itemDTO);
-    rm = removeItemFromList(value.items[value.items.length - 1]);
-    rm.then(function (ret) {
-        console.log(rm);
-    })
-})
+    // rm = removeItemFromList(value.items[value.items.length - 1]);
+    // rm.then(function (ret) {
+    // console.log(rm);
+    // })
+// })
 
-/* 
-const today = new Date();
-const items = [
-    new ItemDTO('', 'get lists function', true),
-    new ItemDTO('', 'save lists function', false),
-];
-const listDTO = new ListDTO("", getStringDate(today), today, 'dayList', items);
-saveList(listDTO); */
+ 
+// const today = new Date();
+// const items = [
+//     new ItemDTO('', 'get lists function', true),
+//     new ItemDTO('', 'save lists function', false),
+// ];
+
+// // const listDTO = new ListDTO("", getStringDate(today), today, 'dayList', items);
+// const listDTO = new ListDTO("", 'test', today, 'personalList', items);
+// saveList(listDTO); 
