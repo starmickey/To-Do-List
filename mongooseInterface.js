@@ -18,6 +18,10 @@ const listTypeSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true
+    },
+    rmDate: {
+        type: Date,
+        default: null
     }
 });
 
@@ -30,6 +34,10 @@ const listSchema = new mongoose.Schema({
         required: true
     },
     date: Date,
+    rmDate: {
+        type: Date,
+        default: null
+    },
     listType: {
         type: listTypeSchema,
         required: true
@@ -47,6 +55,10 @@ const itemSchema = new mongoose.Schema({
     checked: {
         type: Boolean,
         default: false
+    },
+    rmDate: {
+        type: Date,
+        default: null
     },
     list: {
         type: listSchema,
@@ -157,7 +169,7 @@ saveList = function (listDTO) {
                 });
             }
         });
-        
+
     })
 }
 
@@ -178,6 +190,29 @@ addItemToList = function (listDTO, itemDTO) {
         })
 
     });
+}
+
+
+removeItemFromList = function (itemDTO) {
+    
+    return new Promise((resolve, reject) => {
+        Item.findOne({ _id: itemDTO.id }, function(err, item){
+            if (err) {
+                reject(err);
+            } else if (item === null) {
+                reject('item ' + itemDTO.name + ' not found.');
+            } else if (item.rmDate !== null){
+                reject('item ' + item.name + ' was already removed.');
+            } else {
+                item.rmDate = new Date();
+                Promise.all([item.save()], function (result) {
+                    resolve('item ' + item.name + ' removed.');
+                });
+            }
+        });
+        
+    })
+
 }
 
 
@@ -208,13 +243,16 @@ getStringDate = function (date) {
 }); */
 
 
-// let listDTOsample = getListByName("Wednesday, February 1");
+let listDTOsample = getListByName("Wednesday, February 1");
 
-// listDTOsample.then(function (value) {
-//     const itemDTO = new ItemDTO('', 'create item dto function', false);
-//     addItemToList(value, itemDTO);
-
-// })
+listDTOsample.then(function (value) {
+    // const itemDTO = new ItemDTO('', 'vanilla2', false);
+    // addItemToList(value, itemDTO);
+    rm = removeItemFromList(value.items[value.items.length - 1]);
+    rm.then(function (ret) {
+        console.log(rm);
+    })
+})
 
 /* 
 const today = new Date();
