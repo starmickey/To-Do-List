@@ -31,6 +31,10 @@ let actualList;
 /* ====== APP EVENTS' HANDLERS ====== */
 
 app.get("/", function (req, res) {
+  res.render("home");
+})
+
+app.get("/today", function (req, res) {
 
   const reqListName = mongoose.getStringDate(new Date());
 
@@ -55,7 +59,7 @@ app.get("/", function (req, res) {
 
 });
 
-app.post("/", function (req, res) {
+app.post("/today", function (req, res) {
 
   const newItem = mongoose.createItemDTO(req.body.newItem);
   actualList.items.push(newItem);
