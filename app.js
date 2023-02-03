@@ -2,9 +2,8 @@
 
 const express = require("express");
 const bodyParser = require("body-parser");
-const { DTOStatus } = require("./mongooseInterface");
+const { DTOStatus } = require(__dirname + "/mongooseInterface.js");
 const mongoose = require(__dirname + "/mongooseInterface.js");
-
 
 
 /* ======= CONFIG EXPRESS APP ======= */
@@ -19,7 +18,14 @@ app.use(express.static("public"));
 
 /* AUXILIARY VARS AND METHODS */
 
-let list;
+class ListUI {
+  constructor(name, items){
+    this.name = name;
+    this.items = items;
+  }
+}
+
+let actualList;
 
 
 /* ====== APP EVENTS' HANDLERS ====== */
@@ -30,19 +36,19 @@ app.get("/", function (req, res) {
 
   mongoose.getListByName(reqListName).then(function (foundList) {
     if (foundList === undefined){
-      list = mongoose.createListDTO(reqListName, new Date(), 'daily', []);
-      mongoose.saveList(list);
-    } else {
-      list = foundList;
+      foundList = mongoose.createListDTO(reqListName, new Date(), 'daily', []);
+      mongoose.saveList(foundList);
     }
 
     let itemsNames = [];
 
-    list.items.forEach(item => {
+    foundList.items.forEach(item => {
       itemsNames.push(item.name);
     });
 
-    res.render("list", { listTitle: list.name, newListItems: itemsNames });
+    actualList = new ListUI(foundList.name, itemsNames);
+
+    res.render("list", { list: actualList });
 
   });
 
@@ -52,9 +58,9 @@ app.get("/", function (req, res) {
 app.post("/", function (req, res) {
 
   const newItem = mongoose.createItemDTO(req.body.newItem);
-  list.items.push(newItem);
-  list.status = DTOStatus.modified;
-  mongoose.saveList(list);
+  actualList.items.push(newItem);
+  actualList.status = DTOStatus.modified;
+  mongoose.saveList(actualList);
 
   res.redirect("/");
 
