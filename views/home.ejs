@@ -6,22 +6,30 @@
 
 <div class="container">
   <div class="row align-items-start">
-    <% for( let index = 0; index < 6; index++ ) { %>
-    <div class="col-lg-4 col-md-6 col-sm-12 px-4">
-      <div class="box heading">
-        <h2>List 1</h2>
-      </div>
 
-      <div class="box">
-        <% for( let j = 0; j < 3; j++ ) { %>
-        <div class="item">
-          <p> Item</p>
+    <% console.log(lists) %> 
+
+    <% lists.forEach(list => { %>
+        
+        <div class="col-lg-4 col-md-6 col-sm-12 px-4">
+          <div class="box heading">
+            <h2> <%= list.name %> </h2>
+          </div>
+    
+          <div class="box">
+
+            <% list.items.forEach(item => { %>
+                <div class="item">
+                  <p> <%= item %> </p>
+                </div>
+             
+            <% }) %>
+
+          </div>
         </div>
-        <% } %>
-      </div>
-    </div>
 
-    <% } %>
+    <% }) %>
+
   </div>
 
 <%- include("footer") -%>

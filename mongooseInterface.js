@@ -130,7 +130,8 @@ exports.createItemDTO = function (name) {
 
 /* ===== DATABASE CRUD OPERATIONS ===== */
 
-function getAllLists() {
+exports.getAllLists = function () {
+
     const listDTOs = [];
 
     return new Promise((resolve, reject) => {
@@ -478,12 +479,12 @@ getListByName('fruits').then(function (list) {
    }); 
 });
  */
-
+/* 
 getAllLists().then(function (lists) {
     lists.forEach(list => {
         console.log(list.items);
     });
 })
 
-
+ */
     

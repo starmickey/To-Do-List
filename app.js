@@ -31,7 +31,23 @@ let actualList;
 /* ====== APP EVENTS' HANDLERS ====== */
 
 app.get("/", function (req, res) {
-  res.render("home");
+
+  mongoose.getAllLists().then(function (listDTOs) {
+    const lists = [];
+
+    listDTOs.forEach(listDTO => {
+      const items = [];
+
+      listDTO.items.forEach(itemDTO => {
+        items.push(itemDTO.name);
+      });
+
+      lists.push(new ListUI(listDTO.name, items));
+    });
+
+    res.render("home", {lists: lists});
+  });
+
 })
 
 app.get("/today", function (req, res) {
