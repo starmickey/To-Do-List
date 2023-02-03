@@ -145,7 +145,7 @@ exports.getListByName = function (listName) {
 
             } else if (lists.length === 0) {
                 console.log("list " + listName + " not found");
-                rej("list " + listName + " not found");
+                res(undefined);
 
             } else {
                 let listFound = false;
@@ -165,7 +165,8 @@ exports.getListByName = function (listName) {
                                 } else {
                                     items.forEach(item => {
                                         if (item.rmDate === null) {
-                                            itemsDTO.push(new ItemDTO(item.id, item.name, item.checked, DTOStatus.unmodified));
+                                            itemsDTO.push(new ItemDTO(item.id, item.name, item.checked,
+                                                DTOStatus.unmodified));
                                         }
                                     });
                                 }
@@ -176,7 +177,8 @@ exports.getListByName = function (listName) {
                         });
 
                         itemPromise.then(function (itemsDTO) {
-                            listDTO = new ListDTO(list.id, list.name, list.date, list.listType.name, itemsDTO, DTOStatus.unmodified);
+                            listDTO = new ListDTO(list.id, list.name, list.date,
+                                list.listType.name, itemsDTO, DTOStatus.unmodified);
                             res(listDTO);
                         });
                     }
@@ -196,8 +198,6 @@ exports.getListByName = function (listName) {
 
 
 exports.saveList = function (listDTO) {
-
-    console.log('saving list');
 
     if (listDTO.status === DTOStatus.new) {
         console.log('creating list');
@@ -242,13 +242,22 @@ function createList(listDTO) {
 
                 const list = new List({ name: listDTO.name, date: listDTO.date, listType: listType });
 
+
                 Promise.all([list.save()]).then(function () {
+
                     console.log('list created: ' + list.name);
 
                     listDTO.items.forEach(itemDTO => {
-                        const item = new Item({ name: itemDTO.name, ckecked: itemDTO.checked, list: list });
+
+                        const item = new Item({
+                            name: itemDTO.name,
+                            ckecked: itemDTO.checked,
+                            list: list
+                        });
+
                         item.save();
                         console.log("Item created: " + item.name);
+
                     });
 
                     resolve('list created: ' + list.name);
@@ -286,10 +295,17 @@ function modifyList(listDTO) {
                 listDTO.items.forEach(itemDTO => {
 
                     if (itemDTO.status === DTOStatus.new) {
-                        const item = new Item({ name: itemDTO.name, ckecked: itemDTO.checked, list: list });
+
+                        const item = new Item({
+                            name: itemDTO.name,
+                            ckecked: itemDTO.checked,
+                            list: list
+                        });
+
                         item.save();
                         console.log('Item created: ' + item.name);
                         resolve('Item created: ' + item.name);
+
 
                     } else if (itemDTO.status === DTOStatus.modified
                         || itemDTO.status === DTOStatus.removed) {
