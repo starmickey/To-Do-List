@@ -131,6 +131,7 @@ exports.createItemDTO = function (name) {
 
 /* ===== DATABASE CRUD OPERATIONS ===== */
 
+
 exports.getListByName = function (listName) {
 
     let listDTO;
@@ -138,7 +139,7 @@ exports.getListByName = function (listName) {
 
     return new Promise((res, rej) => {
 
-        List.find({ name: listName }, function (err, lists) {
+        List.find({ name: listName, rmDate: null }, function (err, lists) {
 
             if (err) {
                 rej(err);
@@ -148,47 +149,36 @@ exports.getListByName = function (listName) {
                 res(undefined);
 
             } else {
-                let listFound = false;
 
                 lists.forEach(list => {
 
-                    if (list.rmDate === null) {
 
-                        listFound = true;
 
-                        const itemPromise = new Promise((resolve, reject) => {
+                    const itemPromise = new Promise((resolve, reject) => {
 
-                            Item.find({ list: list }, function (error, items) {
-                                if (error) {
-                                    reject(error);
+                        Item.find({ list: list, rmDate: null }, function (error, items) {
+                            if (error) {
+                                reject(error);
 
-                                } else {
-                                    items.forEach(item => {
-                                        if (item.rmDate === null) {
-                                            itemsDTO.push(new ItemDTO(item.id, item.name, item.checked,
-                                                DTOStatus.unmodified));
-                                        }
-                                    });
-                                }
+                            } else {
+                                items.forEach(item => {
+                                    itemsDTO.push(new ItemDTO(item.id, item.name, item.checked,
+                                        DTOStatus.unmodified));
+                                });
+                            }
 
-                                resolve(itemsDTO);
-
-                            });
+                            resolve(itemsDTO);
                         });
+                    });
 
-                        itemPromise.then(function (itemsDTO) {
-                            listDTO = new ListDTO(list.id, list.name, list.date,
-                                list.listType.name, itemsDTO, DTOStatus.unmodified);
-                            res(listDTO);
-                        });
-                    }
+                    itemPromise.then(function (itemsDTO) {
+                        listDTO = new ListDTO(list.id, list.name, list.date,
+                            list.listType.name, itemsDTO, DTOStatus.unmodified);
+                        res(listDTO);
+                    });
 
                 });
 
-                if (!listFound) {
-                    console.log("list " + listName + " was removed");
-                    rej("list " + listName + " was removed");
-                }
             }
 
         });
@@ -219,29 +209,17 @@ function createList(listDTO) {
 
     return new Promise((resolve, reject) => {
 
-        ListType.find({ name: listDTO.listType }, function (err, listTypes) {
+        ListType.findOne({ name: listDTO.listType, rmDate: null }, function (err, listType) {
 
             if (err) {
                 reject(err);
 
-            } else if (listTypes.length === 0) {
+            } else if (listType === null) {
                 reject("list type " + listDTO.listType + " not found.");
 
             } else {
-                let listType;
-
-                listTypes.forEach(lt => {
-                    if (lt.rmDate === null) {
-                        listType = lt;
-                    }
-                });
-
-                if (listType === null) {
-                    reject("list type " + listDTO.listType + " not found.");
-                }
 
                 const list = new List({ name: listDTO.name, date: listDTO.date, listType: listType });
-
 
                 Promise.all([list.save()]).then(function () {
 
@@ -273,7 +251,7 @@ function modifyList(listDTO) {
 
     return new Promise((resolve, reject) => {
 
-        List.findOne({ _id: listDTO.id }, function (err, list) {
+        List.findOne({ _id: listDTO.id, rmDate: null }, function (err, list) {
 
             if (err) {
                 console.log(err);
@@ -282,10 +260,6 @@ function modifyList(listDTO) {
             } else if (list === null) {
                 console.log('list not found');
                 reject("list " + listDTO.name + " not found");
-
-            } else if (list.rmDate !== null) {
-                console.log('list was removed');
-                reject("list " + listDTO.name + " was removed");
 
             } else {
 
@@ -310,16 +284,13 @@ function modifyList(listDTO) {
                     } else if (itemDTO.status === DTOStatus.modified
                         || itemDTO.status === DTOStatus.removed) {
 
-                        Item.findOne({ _id: itemDTO.id }, function (err, item) {
+                        Item.findOne({ _id: itemDTO.id, rmDate: null }, function (err, item) {
 
                             if (err) {
                                 reject(err);
 
                             } else if (item === null) {
                                 reject('item ' + itemDTO.name + ' not found.');
-
-                            } else if (item.rmDate !== null) {
-                                reject('item ' + item.name + ' was been removed.');
 
                             } else {
 
@@ -349,7 +320,7 @@ function modifyList(listDTO) {
 removeList = function (listDTO) {
     return new Promise((resolve, reject) => {
 
-        List.findOne({ _id: listDTO.id }, function (err, list) {
+        List.findOne({ _id: listDTO.id, rmDate: null }, function (err, list) {
 
             if (err) {
                 console.log(err);
@@ -358,10 +329,6 @@ removeList = function (listDTO) {
             } else if (list === null) {
                 console.log('list not found');
                 reject("list " + listDTO.name + " not found");
-
-            } else if (list.rmDate !== null) {
-                console.log('list was removed');
-                reject("list " + listDTO.name + " was already removed");
 
             } else {
                 list.rmDate = new Date();
