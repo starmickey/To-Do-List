@@ -105,7 +105,6 @@ class ListDTO {
 }
 
 
-
 class ItemDTO {
     constructor(id, name, checked, status) {
         this.id = String(id);
@@ -131,6 +130,49 @@ exports.createItemDTO = function (name) {
 
 /* ===== DATABASE CRUD OPERATIONS ===== */
 
+function getAllLists() {
+    const listDTOs = [];
+
+    return new Promise((resolve, reject) => {
+
+        List.find({ rmDate: null }, function (error, lists) {
+            if (error) {
+                reject(error);
+
+            } else {
+                const itemPromises = [];
+
+                lists.forEach(list => {
+                    const itemDTOs = [];
+
+                    itemPromises.push(new Promise((res, rej) => {
+                        
+                        Item.find({ list: list, rmDate: null }, function (err, items) {
+    
+                            if (err) {
+                                rej(err);
+
+                            } else {
+                                items.forEach(item => {
+                                    itemDTOs.push(new ItemDTO(item.id, item.name, item.checked, DTOStatus.unmodified));
+                                });
+    
+                                listDTOs.push(new ListDTO(list.id, list.name, list.date, list.listType.name, itemDTOs, DTOStatus.unmodified));
+                                res();
+                            }
+                        });
+
+                    }));
+                });
+
+                Promise.all(itemPromises).then(function () {
+                    resolve(listDTOs);
+                })
+            }
+        });
+
+    })
+}
 
 exports.getListByName = function (listName) {
 
@@ -149,34 +191,23 @@ exports.getListByName = function (listName) {
                 res(undefined);
 
             } else {
+                let list = lists[0];
 
-                lists.forEach(list => {
+                Item.find({ list: list, rmDate: null }, function (error, items) {
+                    if (error) {
+                        rej(error);
 
-
-
-                    const itemPromise = new Promise((resolve, reject) => {
-
-                        Item.find({ list: list, rmDate: null }, function (error, items) {
-                            if (error) {
-                                reject(error);
-
-                            } else {
-                                items.forEach(item => {
-                                    itemsDTO.push(new ItemDTO(item.id, item.name, item.checked,
-                                        DTOStatus.unmodified));
-                                });
-                            }
-
-                            resolve(itemsDTO);
+                    } else {
+                        items.forEach(item => {
+                            itemsDTO.push(new ItemDTO(item.id, item.name, item.checked,
+                                DTOStatus.unmodified));
                         });
-                    });
 
-                    itemPromise.then(function (itemsDTO) {
                         listDTO = new ListDTO(list.id, list.name, list.date,
                             list.listType.name, itemsDTO, DTOStatus.unmodified);
-                        res(listDTO);
-                    });
 
+                        res(listDTO);
+                    }
                 });
 
             }
@@ -448,3 +479,11 @@ getListByName('fruits').then(function (list) {
 });
  */
 
+getAllLists().then(function (lists) {
+    lists.forEach(list => {
+        console.log(list.items);
+    });
+})
+
+
+    
