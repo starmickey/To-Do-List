@@ -22,34 +22,6 @@ app.use(express.static("public"));
 let list;
 
 
-function refreshList(reqListName) {
-
-  return new Promise((resolve, reject) => {
-
-    if (list === undefined || list.name !== reqListName) {
-
-      mongoose.getListByName(reqListName).then(function (foundList) {
-
-        list = foundList;
-        itemsNames = [];
-
-        list.items.forEach(item => {
-          itemsNames.push(item.name);
-        });
-
-        resolve('list refreshed');
-
-      });
-
-    } else {
-      resolve("list wash't refreshed");
-    }
-
-  })
-
-
-}
-
 /* ====== APP EVENTS' HANDLERS ====== */
 
 app.get("/", function (req, res) {
@@ -85,7 +57,7 @@ app.post("/", function (req, res) {
   mongoose.saveList(list);
 
   res.redirect("/");
-  
+
 });
 
 app.get("/about", function (req, res) {
