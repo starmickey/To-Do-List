@@ -50,6 +50,7 @@ app.get("/", function (req, res) {
 
 })
 
+
 app.get("/today", function (req, res) {
 
   const reqListName = mongoose.getStringDate(new Date());
