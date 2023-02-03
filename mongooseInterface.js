@@ -116,7 +116,7 @@ class ItemDTO {
 
 
 
-// Export constructors
+// Export DTO constructors
 
 exports.createListDTO = function (name, date, listType, items) {
     return new ListDTO('', name, date, listType, items, DTOStatus.new);
@@ -128,15 +128,17 @@ exports.createItemDTO = function (name) {
 
 
 
-/* ===== DATABASE CRUD OPERATIONS ===== */
+/* ===== EXPORT CRUD OPERATIONS ===== */
 
 exports.getAllLists = function () {
 
     const listDTOs = [];
 
+
     return new Promise((resolve, reject) => {
 
         List.find({ rmDate: null }, function (error, lists) {
+
             if (error) {
                 reject(error);
 
@@ -161,6 +163,7 @@ exports.getAllLists = function () {
                                 listDTOs.push(new ListDTO(list.id, list.name, list.date, list.listType.name, itemDTOs, DTOStatus.unmodified));
                                 res();
                             }
+
                         });
 
                     }));
@@ -195,6 +198,7 @@ exports.getListByName = function (listName) {
                 let list = lists[0];
 
                 Item.find({ list: list, rmDate: null }, function (error, items) {
+
                     if (error) {
                         rej(error);
 
@@ -209,6 +213,7 @@ exports.getListByName = function (listName) {
 
                         res(listDTO);
                     }
+                    
                 });
 
             }
@@ -235,6 +240,8 @@ exports.saveList = function (listDTO) {
     }
 
 }
+
+/* === SAVE LIST AUXILIARY OPERATIONS === */
 
 
 function createList(listDTO) {
@@ -349,7 +356,8 @@ function modifyList(listDTO) {
 }
 
 
-removeList = function (listDTO) {
+function removeList (listDTO) {
+
     return new Promise((resolve, reject) => {
 
         List.findOne({ _id: listDTO.id, rmDate: null }, function (err, list) {
@@ -372,6 +380,7 @@ removeList = function (listDTO) {
             }
         });
     });
+
 }
 
 
@@ -409,15 +418,6 @@ exports.getStringDate = getStringDate;
 
 /* TEST TRANSACTIONS */
 
-/* List.findOne({name: getStringDate(new Date())}, function (err, list) {
-    if (err) {
-        console.log(err);
-    } else {
-        console.log(list.name);
-    }
-}); */
-
-
 // let listDTOsample = getListByName("Wednesday, February 1");
 // let listDTOsample = getListByName(getStringDate(new Date()));
 
@@ -431,16 +431,6 @@ exports.getStringDate = getStringDate;
 // })
 // })
 
-
-// const today = new Date();
-// const items = [
-//     new ItemDTO('', 'create function for saving new lists', true),
-//     new ItemDTO('', 'create function for adding items to the new list', true),
-//     new ItemDTO('', 'create function for getting a list by its name', true),
-//     new ItemDTO('', 'add new functions to app.js file', false)
-// ];
-
-
 // const listDTO = new ListDTO("", getStringDate(today), today, 'test', items, DTOStatus.new);
 // const listDTO = new ListDTO("", 'test', today, 'test', items);
 // saveList(listDTO);
@@ -453,10 +443,6 @@ const items = [
     createItemDTO('peach'),
     createItemDTO('apple')
 ]
-
-const list = createListDTO('fruits', new Date(), 'test', items);
-saveList(list);
- */
 
 // const newItem = createItemDTO('orange');
 /* 
@@ -487,4 +473,4 @@ getAllLists().then(function (lists) {
 })
 
  */
-    
+
