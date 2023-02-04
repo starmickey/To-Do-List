@@ -45,15 +45,22 @@ app.post("/login", function (req, res) {
       res.render("login", { message: 'something went wrong, try again' });
     } else {
       actualUserDTO = userDTO;
-      console.log(userDTO);
+      res.redirect("/");
     }
   });
 });
 
 app.get("/", function (req, res) {
 
-  mongoose.getUser('test', 'test').then(function (userDTO) {
-    mongoose.getAllUserLists(userDTO).then(function (listDTOs) {
+  if (actualUserDTO === undefined) {
+    res.redirect("/login");
+
+  } else if (actualUserDTO.status !== LogInStatus.loggedin) {
+    res.redirect("/login");
+
+  } else {
+
+    mongoose.getAllUserLists(actualUserDTO).then(function (listDTOs) {
       const lists = [];
 
       listDTOs.forEach(listDTO => {
@@ -68,28 +75,32 @@ app.get("/", function (req, res) {
 
       res.render("home", { lists: lists });
     });
-  })
-
-
-
+  }
 })
 
 
 app.get("/list", function (req, res) {
 
-  const reqListName = lodash.lowerCase(req.query.title);
+  if (actualUserDTO === undefined) {
+    res.redirect("/login");
 
-  mongoose.getUser('test', 'test').then(function (userDTO) {
-    mongoose.getListByName(reqListName, userDTO.id).then(function (foundList) {
+  } else if (actualUserDTO.status !== LogInStatus.loggedin) {
+    res.redirect("/login");
+
+  } else {
+    
+    const reqListName = lodash.lowerCase(req.query.title);
+
+    mongoose.getListByName(reqListName, actualUserDTO.id).then(function (foundList) {
       if (foundList === null) {
-        foundList = mongoose.createListDTO(reqListName, userDTO.id, new Date(), []);
+        foundList = mongoose.createListDTO(reqListName, actualUserDTO.id, new Date(), []);
         mongoose.saveList(foundList);
       }
 
       let itemsNames = [];
 
       actualListDTO = foundList;
-      
+
       foundList.items.forEach(item => {
         itemsNames.push(item.name);
       });
@@ -99,7 +110,7 @@ app.get("/list", function (req, res) {
       res.render("list", { list: listUI });
 
     });
-  });
+  }
 
 });
 
