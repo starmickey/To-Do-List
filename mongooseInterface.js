@@ -14,18 +14,23 @@ async function connectMongoose() {
 
 /* ======= CREATE MODELS AND SCHEMAS ======= */
 
-const listTypeSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true
     },
+    password: {
+        type: String,
+        required: true
+    },
+    email: String,
     rmDate: {
         type: Date,
         default: null
     }
 });
 
-const ListType = new mongoose.model('ListType', listTypeSchema);
+const User = new mongoose.model('user', userSchema);
 
 
 const listSchema = new mongoose.Schema({
@@ -38,8 +43,8 @@ const listSchema = new mongoose.Schema({
         type: Date,
         default: null
     },
-    listType: {
-        type: listTypeSchema,
+    user: {
+        type: userSchema,
         required: true
     }
 });
@@ -51,10 +56,6 @@ const itemSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true
-    },
-    checked: {
-        type: Boolean,
-        default: false
     },
     rmDate: {
         type: Date,
@@ -81,35 +82,40 @@ const DTOStatus = {
 
 exports.DTOStatus = DTOStatus;
 
+const LogInStatus = {
+    loggedin: 0,
+    userNotFound: 1,
+    error: 2
+}
+
+exports.LogInStatus = LogInStatus;
 
 
 /* ==== CREATE DTO CONSTRUCTORS AND EXPORTS ==== */
 
-class ListTypeDTO {
-    constructor(id, name) {
+class UserDTO {
+    constructor (id, name, status){
         this.id = String(id);
         this.name = String(name);
+        this.status = status;
     }
 }
 
-
 class ListDTO {
-    constructor(id, name, date, listType, items, status) {
+    constructor(id, userId, name, date, items, status) {
         this.id = String(id);
+        this.userId = String(userId);
         this.name = String(name);
         this.date = date;
-        this.listType = String(listType);
         this.items = items;
         this.status = status;
     }
 }
 
-
 class ItemDTO {
-    constructor(id, name, checked, status) {
+    constructor(id, name, status) {
         this.id = String(id);
         this.name = String(name);
-        this.checked = Boolean(checked);
         this.status = status;
     }
 }
@@ -118,19 +124,19 @@ class ItemDTO {
 
 // Export DTO constructors
 
-exports.createListDTO = function (name, date, listType, items) {
-    return new ListDTO('', name, date, listType, items, DTOStatus.new);
+exports.createListDTO = function (name, date, items) {
+    return new ListDTO('', name, date, items, DTOStatus.new);
 }
 
 exports.createItemDTO = function (name) {
-    return new ItemDTO('', name, false, DTOStatus.new);
+    return new ItemDTO('', name, DTOStatus.new);
 }
 
 
 
 /* ===== EXPORT CRUD OPERATIONS ===== */
 
-exports.getAllLists = function () {
+getAllLists = function () {
 
     const listDTOs = [];
 
@@ -149,18 +155,18 @@ exports.getAllLists = function () {
                     const itemDTOs = [];
 
                     itemPromises.push(new Promise((res, rej) => {
-                        
+
                         Item.find({ list: list, rmDate: null }, function (err, items) {
-    
+
                             if (err) {
                                 rej(err);
 
                             } else {
                                 items.forEach(item => {
-                                    itemDTOs.push(new ItemDTO(item.id, item.name, item.checked, DTOStatus.unmodified));
+                                    itemDTOs.push(new ItemDTO(item.id, item.name, DTOStatus.unmodified));
                                 });
-    
-                                listDTOs.push(new ListDTO(list.id, list.name, list.date, list.listType.name, itemDTOs, DTOStatus.unmodified));
+
+                                listDTOs.push(new ListDTO(list.id, list.name, list.date, itemDTOs, DTOStatus.unmodified));
                                 res();
                             }
 
@@ -178,7 +184,7 @@ exports.getAllLists = function () {
     })
 }
 
-exports.getListByName = function (listName) {
+getListByName = function (listName) {
 
     let listDTO;
     let itemsDTO = [];
@@ -204,16 +210,16 @@ exports.getListByName = function (listName) {
 
                     } else {
                         items.forEach(item => {
-                            itemsDTO.push(new ItemDTO(item.id, item.name, item.checked,
+                            itemsDTO.push(new ItemDTO(item.id, item.name,
                                 DTOStatus.unmodified));
                         });
 
                         listDTO = new ListDTO(list.id, list.name, list.date,
-                            list.listType.name, itemsDTO, DTOStatus.unmodified);
+                            itemsDTO, DTOStatus.unmodified);
 
                         res(listDTO);
                     }
-                    
+
                 });
 
             }
@@ -243,43 +249,50 @@ exports.saveList = function (listDTO) {
 
 /* === SAVE LIST AUXILIARY OPERATIONS === */
 
+function getUser(name, password) {
+    return new Promise((resolve, reject) => {
+        
+        User.findOne({name: name, password: password}, function(error, user){
+
+            if(error){
+                resolve(new UserDTO('', name, LogInStatus.error));
+
+            } else if (user === null){
+                resolve(new UserDTO('', name, LogInStatus.userNotFound));
+
+            } else {
+                resolve(new UserDTO(user.id, user.name, LogInStatus.loggedin));
+
+            }
+        })
+    });
+}
+
 
 function createList(listDTO) {
 
     return new Promise((resolve, reject) => {
 
-        ListType.findOne({ name: listDTO.listType, rmDate: null }, function (err, listType) {
+        const list = new List({ name: listDTO.name, date: listDTO.date });
 
-            if (err) {
-                reject(err);
+        Promise.all([list.save()]).then(function () {
 
-            } else if (listType === null) {
-                reject("list type " + listDTO.listType + " not found.");
+            console.log('list created: ' + list.name);
 
-            } else {
+            listDTO.items.forEach(itemDTO => {
 
-                const list = new List({ name: listDTO.name, date: listDTO.date, listType: listType });
-
-                Promise.all([list.save()]).then(function () {
-
-                    console.log('list created: ' + list.name);
-
-                    listDTO.items.forEach(itemDTO => {
-
-                        const item = new Item({
-                            name: itemDTO.name,
-                            ckecked: itemDTO.checked,
-                            list: list
-                        });
-
-                        item.save();
-                        console.log("Item created: " + item.name);
-
-                    });
-
-                    resolve('list created: ' + list.name);
+                const item = new Item({
+                    name: itemDTO.name,
+                    ckecked: itemDTO.checked,
+                    list: list
                 });
-            }
+
+                item.save();
+                console.log("Item created: " + item.name);
+
+            });
+
+            resolve('list created: ' + list.name);
         });
 
     })
@@ -356,7 +369,7 @@ function modifyList(listDTO) {
 }
 
 
-function removeList (listDTO) {
+function removeList(listDTO) {
 
     return new Promise((resolve, reject) => {
 
@@ -403,15 +416,19 @@ exports.getStringDate = getStringDate;
 
 /* INITIALIZE DATABASE */
 
-// let listTypes = [];
-// listTypes.push(new ListType({name: 'daily'}));
-// listTypes.push(new ListType({name: 'personal'}));
-// listTypes.push(new ListType({name: 'test'}));
+// const testUser = new User({name: 'test', password: 'test'});
+// testUser.save();
 
-// listTypes.forEach(listType => {
-//     listType.save();
+// const testUser = User.findOne({name: 'test'}, function(err, user){
+//     // console.log(user);
+//     const testList = new List({name: 'list1', date: new Date(), user: user});
+//     testList.save();
 // });
 
+// List.findOne({name: 'list1'}, function(err, list){
+    // const testItem = new Item({name: 'testItem1', list: list});
+    // testItem.save();
+// })
 
 
 
@@ -474,3 +491,6 @@ getAllLists().then(function (lists) {
 
  */
 
+getUser('test','test1').then(function(user){
+    console.log(user);
+});
