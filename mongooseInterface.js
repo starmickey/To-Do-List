@@ -158,50 +158,65 @@ function getUser(name, password) {
 
 
 
-getAllLists = function () {
+function getAllUserLists (userDTO) {
 
-    const listDTOs = [];
+    return new Promise((resolve, reject) => {
+        
+        User.findOne({_id: userDTO.id, rmDate: null}, function(userError, user){
+            if (userError) {
+                reject(userError);
+
+            } else if (user === null) {
+                reject ('user ' + userDTO.name + 'not found');
+
+            } else {
+                const listDTOs = [];
+
+                List.find({ user: user, rmDate: null }, function (listError, lists) {
+            
+                    if (listError) {
+                        reject(listError);
+            
+                    } else {
+                        const itemPromises = [];
+            
+                        lists.forEach(list => {
+                            const itemDTOs = [];
+            
+                            itemPromises.push(new Promise((res, rej) => {
+            
+                                Item.find({ list: list, rmDate: null }, function (err, items) {
+            
+                                    if (err) {
+                                        rej(err);
+            
+                                    } else {
+                                        items.forEach(item => {
+                                            itemDTOs.push(new ItemDTO(item.id, item.name, DTOStatus.unmodified));
+                                        });
+            
+                                        listDTOs.push(new ListDTO(list.id, list.name, user.id, list.date, itemDTOs, DTOStatus.unmodified));
+                                        res();
+                                    }
+            
+                                });
+            
+                            }));
+                        });
+            
+                        Promise.all(itemPromises).then(function () {
+                            resolve(listDTOs);
+                        });
+                    }
+            
+                });
+            }
+        });
+    });
+
 
 
     return new Promise((resolve, reject) => {
-
-        List.find({ rmDate: null }, function (error, lists) {
-
-            if (error) {
-                reject(error);
-
-            } else {
-                const itemPromises = [];
-
-                lists.forEach(list => {
-                    const itemDTOs = [];
-
-                    itemPromises.push(new Promise((res, rej) => {
-
-                        Item.find({ list: list, rmDate: null }, function (err, items) {
-
-                            if (err) {
-                                rej(err);
-
-                            } else {
-                                items.forEach(item => {
-                                    itemDTOs.push(new ItemDTO(item.id, item.name, DTOStatus.unmodified));
-                                });
-
-                                listDTOs.push(new ListDTO(list.id, list.name, list.date, itemDTOs, DTOStatus.unmodified));
-                                res();
-                            }
-
-                        });
-
-                    }));
-                });
-
-                Promise.all(itemPromises).then(function () {
-                    resolve(listDTOs);
-                })
-            }
-        });
 
     })
 }
@@ -278,7 +293,6 @@ function createList(listDTO) {
 
         User.findOne({ _id: listDTO.userId, rmDate: null }, function (userError, user) {
 
-            
             if (userError) {
                 reject(userError);
 
@@ -506,11 +520,14 @@ getAllLists().then(function (lists) {
 
 
 
+/* 
+getUser('test', 'test').then(function (userDTO) {
+    if (userDTO.status === LogInStatus.loggedin) {
+        // const listDTO = createListDTO('testList2', userDTO.id, new Date(), []);
+        // saveList(listDTO);
 
-// getUser('test', 'test').then(function (user) {
-//     if (user.status === LogInStatus.loggedin) {
-//         const listDTO = createListDTO('testList2', user.id, new Date(), []);
-//         saveList(listDTO);
-
-//     }
-// });
+        getAllUserLists(userDTO).then(function(listDTOs){
+            console.log(listDTOs);
+        });
+    }
+}); */
