@@ -163,6 +163,7 @@ function getAllUserLists (userDTO) {
     return new Promise((resolve, reject) => {
         
         User.findOne({_id: userDTO.id, rmDate: null}, function(userError, user){
+
             if (userError) {
                 reject(userError);
 
@@ -181,6 +182,7 @@ function getAllUserLists (userDTO) {
                         const itemPromises = [];
             
                         lists.forEach(list => {
+                            
                             const itemDTOs = [];
             
                             itemPromises.push(new Promise((res, rej) => {
@@ -213,12 +215,6 @@ function getAllUserLists (userDTO) {
             }
         });
     });
-
-
-
-    return new Promise((resolve, reject) => {
-
-    })
 }
 
 getListByName = function (listName) {
