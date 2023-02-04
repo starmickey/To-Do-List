@@ -8,23 +8,27 @@
   <div class="row align-items-start">
 
 
-    <% lists.forEach(list => { %>
+    <% lists.forEach(list=> { %>
 
     <div class="col-lg-4 col-md-6 col-sm-12 px-4">
       <div class="box heading">
-        <h2> <%= list.name %> </h2>
+        <h2>
+          <%= list.name %>
+        </h2>
       </div>
 
       <div class="box">
 
-        <% let index = 0 %>
+        <% let index=0 %>
         <% while (index < list.items.length && index < 3) { %>
 
-          <% let item = list.items[index] %>
-          <div class="item">
-            <p> <%= item %> </p>
-          </div>
-          <% index++ %> 
+        <% let item=list.items[index] %>
+        <div class="item">
+          <p>
+            <%= item %>
+          </p>
+        </div>
+        <% index++ %>
         <% } %>
 
       </div>

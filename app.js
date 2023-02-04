@@ -30,6 +30,10 @@ let actualList;
 
 /* ====== APP EVENTS' HANDLERS ====== */
 
+app.get("/login", function (req, res) {
+  res.render("login");
+})
+
 app.get("/", function (req, res) {
 
   mongoose.getAllLists().then(function (listDTOs) {
