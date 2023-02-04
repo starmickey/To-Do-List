@@ -158,109 +158,122 @@ function getUser(name, password) {
 
 
 
-function getAllUserLists (userDTO) {
+function getAllUserLists(userDTO) {
 
     return new Promise((resolve, reject) => {
-        
-        User.findOne({_id: userDTO.id, rmDate: null}, function(userError, user){
+
+        User.findOne({ _id: userDTO.id, rmDate: null }, function (userError, user) {
 
             if (userError) {
                 reject(userError);
 
             } else if (user === null) {
-                reject ('user ' + userDTO.name + 'not found');
+                reject('user ' + userDTO.name + 'not found');
 
             } else {
                 const listDTOs = [];
 
                 List.find({ user: user, rmDate: null }, function (listError, lists) {
-            
+
                     if (listError) {
                         reject(listError);
-            
+
                     } else {
                         const itemPromises = [];
-            
+
                         lists.forEach(list => {
-                            
+
                             const itemDTOs = [];
-            
+
                             itemPromises.push(new Promise((res, rej) => {
-            
+
                                 Item.find({ list: list, rmDate: null }, function (err, items) {
-            
+
                                     if (err) {
                                         rej(err);
-            
+
                                     } else {
                                         items.forEach(item => {
                                             itemDTOs.push(new ItemDTO(item.id, item.name, DTOStatus.unmodified));
                                         });
-            
+
                                         listDTOs.push(new ListDTO(list.id, list.name, user.id, list.date, itemDTOs, DTOStatus.unmodified));
                                         res();
                                     }
-            
+
                                 });
-            
+
                             }));
                         });
-            
+
                         Promise.all(itemPromises).then(function () {
                             resolve(listDTOs);
                         });
                     }
-            
+
                 });
             }
         });
     });
 }
 
-getListByName = function (listName) {
+function getListByName(listName, userID) {
 
-    let listDTO;
-    let itemsDTO = [];
+    return new Promise((resolve, reject) => {
 
-    return new Promise((res, rej) => {
+        User.findOne({ _id: userID, rmDate: null }, function (userError, user) {
+            if (userError) {
+                reject(userError);
 
-        List.find({ name: listName, rmDate: null }, function (err, lists) {
-
-            if (err) {
-                rej(err);
-
-            } else if (lists.length === 0) {
-                console.log("list " + listName + " not found");
-
-                res(undefined);
+            } else if (user === null) {
+                reject('user of ' + listName + 'not found');
 
             } else {
-                let list = lists[0];
 
-                Item.find({ list: list, rmDate: null }, function (error, items) {
+                List.find({ name: listName, user: user, rmDate: null }, function (listError, lists) {
 
-                    if (error) {
-                        rej(error);
+                    if (listError) {
+                        reject(listError);
+
+                    } else if (lists.length === 0) {
+                        console.log("list " + listName + " not found");
+
+                        resolve(null);
 
                     } else {
-                        items.forEach(item => {
-                            itemsDTO.push(new ItemDTO(item.id, item.name,
-                                DTOStatus.unmodified));
+                        let list = lists[0];
+
+                        Item.find({ list: list, rmDate: null }, function (itemError, items) {
+
+                            if (itemError) {
+                                reject(itemError);
+
+                            } else {
+
+                                const itemsDTO = [];
+
+                                items.forEach(item => {
+                                    itemsDTO.push(new ItemDTO(item.id, item.name,
+                                        DTOStatus.unmodified));
+                                });
+
+                                resolve(new ListDTO(list.id, list.name, user.id, list.date,
+                                    itemsDTO, DTOStatus.unmodified));
+                            }
+
                         });
 
-                        listDTO = new ListDTO(list.id, list.name, list.date,
-                            itemsDTO, DTOStatus.unmodified);
-
-                        res(listDTO);
                     }
 
                 });
 
             }
+        })
+    })
 
-        });
 
-    });
+
+
 }
 
 
@@ -516,14 +529,18 @@ getAllLists().then(function (lists) {
 
 
 
-/* 
+
 getUser('test', 'test').then(function (userDTO) {
     if (userDTO.status === LogInStatus.loggedin) {
         // const listDTO = createListDTO('testList2', userDTO.id, new Date(), []);
         // saveList(listDTO);
 
-        getAllUserLists(userDTO).then(function(listDTOs){
-            console.log(listDTOs);
+        // getAllUserLists(userDTO).then(function(listDTOs){
+            // console.log(listDTOs);
+        // });
+
+        getListByName('list1', userDTO.id).then(function(listDTO){
+            console.log(listDTO);
         });
     }
-}); */
+}); 
