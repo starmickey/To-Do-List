@@ -42,6 +42,10 @@ p {
   margin: auto;
 }
 
+.list-button {
+  text-decoration: none;
+}
+
 #main-heading {
   margin: 50px auto;
 }

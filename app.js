@@ -26,8 +26,8 @@ class ListUI {
   }
 }
 
-let actualList;
-let actualUser;
+let actualListUI;
+let actualUserDTO;
 
 
 /* ====== APP EVENTS' HANDLERS ====== */
@@ -41,7 +41,7 @@ app.post("/login", function (req, res) {
     if (userDTO.status === LogInStatus.userNotFound || userDTO.status === LogInStatus.error) {
       res.render("login", { message: 'something went wrong, try again' });
     } else {
-      actualUser = userDTO;
+      actualUserDTO = userDTO;
       console.log(userDTO);
     }
   });
@@ -49,21 +49,25 @@ app.post("/login", function (req, res) {
 
 app.get("/", function (req, res) {
 
-  mongoose.getAllLists().then(function (listDTOs) {
-    const lists = [];
+  mongoose.getUser('test', 'test').then(function (userDTO) {
+    mongoose.getAllUserLists(userDTO).then(function (listDTOs) {
+      const lists = [];
 
-    listDTOs.forEach(listDTO => {
-      const items = [];
+      listDTOs.forEach(listDTO => {
+        const items = [];
 
-      listDTO.items.forEach(itemDTO => {
-        items.push(itemDTO.name);
+        listDTO.items.forEach(itemDTO => {
+          items.push(itemDTO.name);
+        });
+
+        lists.push(new ListUI(listDTO.name, items));
       });
 
-      lists.push(new ListUI(listDTO.name, items));
+      res.render("home", { lists: lists });
     });
+  })
 
-    res.render("home", { lists: lists });
-  });
+
 
 })
 
@@ -72,33 +76,35 @@ app.get("/today", function (req, res) {
 
   const reqListName = mongoose.getStringDate(new Date());
 
-  mongoose.getListByName(reqListName).then(function (foundList) {
-    if (foundList === undefined) {
-      foundList = mongoose.createListDTO(reqListName, new Date(), 'daily', []);
-      mongoose.saveList(foundList);
-    }
+  mongoose.getUser('test', 'test').then(function (userDTO) {
+    mongoose.getListByName(reqListName, userDTO.id).then(function (foundList) {
+      if (foundList === null) {
+        foundList = mongoose.createListDTO(reqListName, userDTO.id, new Date(), []);
+        mongoose.saveList(foundList);
+      }
 
-    let itemsNames = [];
+      let itemsNames = [];
 
-    foundList.items.forEach(item => {
-      itemsNames.push(item.name);
+      foundList.items.forEach(item => {
+        itemsNames.push(item.name);
+      });
+
+      actualListUI = new ListUI(foundList.name, itemsNames);
+
+      res.render("list", { list: actualListUI });
+
     });
-
-    actualList = new ListUI(foundList.name, itemsNames);
-
-    res.render("list", { list: actualList });
-
   });
 
-
 });
+
 
 app.post("/today", function (req, res) {
 
   const newItem = mongoose.createItemDTO(req.body.newItem);
-  actualList.items.push(newItem);
-  actualList.status = DTOStatus.modified;
-  mongoose.saveList(actualList);
+  actualListUI.items.push(newItem);
+  actualListUI.status = DTOStatus.modified;
+  mongoose.saveList(actualListUI);
 
   res.redirect("/");
 
