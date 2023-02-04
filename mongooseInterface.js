@@ -444,6 +444,8 @@ function removeList(listDTO) {
 }
 
 
+/* ===== NOT DB TRANSACTIONAL EXPORT OPERATIONS ==== */
+
 function getStringDate(date) {
 
     const options = {
