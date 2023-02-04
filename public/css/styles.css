@@ -124,12 +124,13 @@ footer {
   text-align: center;
 }
 
-.btn-primary {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
-}
-
-.btn-primary:hover {
+.btn-primary, .btn-primary:hover, .btn-primary:active {
   background-color: var(--primary-color-hover);
   border-color: var(--primary-color-hover);
+}
+
+.btn-primary:focus-visible {
+  background-color: var(--primary-color-hover);
+  border-color: var(--primary-color-hover);
+  /* box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-hover), .5); */
 }

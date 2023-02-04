@@ -6,19 +6,20 @@
 
 <div class="box">
   <div class="form-signin w-100 m-auto pt-4">
+    <p><%= message %></p>
     <form action="/login" method="post">
       <div class="form-floating">
-        <input type="text" class="form-control" id="floatingInput" placeholder="ana-banana">
+        <input type="text" class="form-control" name="userName" id="floatingInput" placeholder="ana-banana">
         <label for="floatingInput">User name</label>
       </div>
       <div class="form-floating">
-        <input type="password" class="form-control" id="floatingPassword" placeholder="Password">
+        <input type="password" class="form-control" name="password" id="floatingPassword" placeholder="Password">
         <label for="floatingPassword">Password</label>
       </div>
   
       <div class="checkbox mb-3">
         <label>
-          <input type="checkbox" value="remember-me"> Remember me
+          <input type="checkbox" value="remember-me" name="rememberMe"> Remember me
         </label>
       </div>
       <button class="w-100 btn btn-lg btn-primary mb-3" type="submit">Sign in</button>

@@ -2,6 +2,7 @@
 
 const express = require("express");
 const bodyParser = require("body-parser");
+const { LogInStatus } = require("./mongooseInterface");
 const { DTOStatus } = require(__dirname + "/mongooseInterface.js");
 const mongoose = require(__dirname + "/mongooseInterface.js");
 
@@ -19,20 +20,32 @@ app.use(express.static("public"));
 /* AUXILIARY VARS AND METHODS */
 
 class ListUI {
-  constructor(name, items){
+  constructor(name, items) {
     this.name = name;
     this.items = items;
   }
 }
 
 let actualList;
+let actualUser;
 
 
 /* ====== APP EVENTS' HANDLERS ====== */
 
 app.get("/login", function (req, res) {
-  res.render("login");
+  res.render("login", { message: '' });
 })
+
+app.post("/login", function (req, res) {
+  mongoose.getUser(req.body.userName, req.body.password).then(function (userDTO) {
+    if (userDTO.status === LogInStatus.userNotFound || userDTO.status === LogInStatus.error) {
+      res.render("login", { message: 'something went wrong, try again' });
+    } else {
+      actualUser = userDTO;
+      console.log(userDTO);
+    }
+  });
+});
 
 app.get("/", function (req, res) {
 
@@ -49,7 +62,7 @@ app.get("/", function (req, res) {
       lists.push(new ListUI(listDTO.name, items));
     });
 
-    res.render("home", {lists: lists});
+    res.render("home", { lists: lists });
   });
 
 })
@@ -60,7 +73,7 @@ app.get("/today", function (req, res) {
   const reqListName = mongoose.getStringDate(new Date());
 
   mongoose.getListByName(reqListName).then(function (foundList) {
-    if (foundList === undefined){
+    if (foundList === undefined) {
       foundList = mongoose.createListDTO(reqListName, new Date(), 'daily', []);
       mongoose.saveList(foundList);
     }
