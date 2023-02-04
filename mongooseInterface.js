@@ -94,7 +94,7 @@ exports.LogInStatus = LogInStatus;
 /* ==== CREATE DTO CONSTRUCTORS AND EXPORTS ==== */
 
 class UserDTO {
-    constructor (id, name, status){
+    constructor(id, name, status) {
         this.id = String(id);
         this.name = String(name);
         this.status = status;
@@ -102,10 +102,10 @@ class UserDTO {
 }
 
 class ListDTO {
-    constructor(id, userId, name, date, items, status) {
+    constructor(id, name, userId, date, items, status) {
         this.id = String(id);
-        this.userId = String(userId);
         this.name = String(name);
+        this.userId = String(userId);
         this.date = date;
         this.items = items;
         this.status = status;
@@ -124,17 +124,39 @@ class ItemDTO {
 
 // Export DTO constructors
 
-exports.createListDTO = function (name, date, items) {
-    return new ListDTO('', name, date, items, DTOStatus.new);
+function createListDTO(name, userId, date, items) {
+    return new ListDTO('', name, userId, date, items, DTOStatus.new);
 }
 
-exports.createItemDTO = function (name) {
+createItemDTO = function (name) {
     return new ItemDTO('', name, DTOStatus.new);
 }
 
 
 
 /* ===== EXPORT CRUD OPERATIONS ===== */
+
+function getUser(name, password) {
+
+    return new Promise((resolve, reject) => {
+
+        User.findOne({ name: name, password: password, rmDate: null }, function (error, user) {
+
+            if (error) {
+                resolve(new UserDTO('', name, LogInStatus.error));
+
+            } else if (user === null) {
+                resolve(new UserDTO('', name, LogInStatus.userNotFound));
+
+            } else {
+                resolve(new UserDTO(user.id, user.name, LogInStatus.loggedin));
+
+            }
+        })
+    });
+}
+
+
 
 getAllLists = function () {
 
@@ -198,6 +220,7 @@ getListByName = function (listName) {
 
             } else if (lists.length === 0) {
                 console.log("list " + listName + " not found");
+
                 res(undefined);
 
             } else {
@@ -230,7 +253,7 @@ getListByName = function (listName) {
 }
 
 
-exports.saveList = function (listDTO) {
+saveList = function (listDTO) {
 
     if (listDTO.status === DTOStatus.new) {
         console.log('creating list');
@@ -249,53 +272,41 @@ exports.saveList = function (listDTO) {
 
 /* === SAVE LIST AUXILIARY OPERATIONS === */
 
-function getUser(name, password) {
-    return new Promise((resolve, reject) => {
-        
-        User.findOne({name: name, password: password, rmDate: null}, function(error, user){
-
-            if(error){
-                resolve(new UserDTO('', name, LogInStatus.error));
-
-            } else if (user === null){
-                resolve(new UserDTO('', name, LogInStatus.userNotFound));
-
-            } else {
-                resolve(new UserDTO(user.id, user.name, LogInStatus.loggedin));
-
-            }
-        })
-    });
-}
-
-
 function createList(listDTO) {
 
     return new Promise((resolve, reject) => {
 
-        const list = new List({ name: listDTO.name, date: listDTO.date });
+        User.findOne({ _id: listDTO.userId, rmDate: null }, function (userError, user) {
 
-        Promise.all([list.save()]).then(function () {
+            
+            if (userError) {
+                reject(userError);
 
-            console.log('list created: ' + list.name);
+            } else if (user === null) {
+                reject('user not found: id ' + listDTO.userId);
 
-            listDTO.items.forEach(itemDTO => {
+            } else {
+                const list = new List({ name: listDTO.name, date: listDTO.date, user: user });
 
-                const item = new Item({
-                    name: itemDTO.name,
-                    ckecked: itemDTO.checked,
-                    list: list
+                Promise.all([list.save()]).then(function () {
+
+                    console.log('list created: ' + list.name);
+
+                    listDTO.items.forEach(itemDTO => {
+                        const item = new Item({ name: itemDTO.name, list: list });
+                        item.save().then(function () {
+                            console.log("Item created: " + item.name);
+                        });
+                    });
+
+                    resolve('list created: ' + list.name);
                 });
 
-                item.save();
-                console.log("Item created: " + item.name);
+            }
 
-            });
-
-            resolve('list created: ' + list.name);
         });
-
     })
+
 }
 
 
@@ -426,8 +437,8 @@ exports.getStringDate = getStringDate;
 // });
 
 // List.findOne({name: 'list1'}, function(err, list){
-    // const testItem = new Item({name: 'testItem1', list: list});
-    // testItem.save();
+// const testItem = new Item({name: 'testItem1', list: list});
+// testItem.save();
 // })
 
 
@@ -491,6 +502,15 @@ getAllLists().then(function (lists) {
 
  */
 
-getUser('test','test1').then(function(user){
-    console.log(user);
-});
+
+
+
+
+
+// getUser('test', 'test').then(function (user) {
+//     if (user.status === LogInStatus.loggedin) {
+//         const listDTO = createListDTO('testList2', user.id, new Date(), []);
+//         saveList(listDTO);
+
+//     }
+// });
