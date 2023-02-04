@@ -252,7 +252,7 @@ exports.saveList = function (listDTO) {
 function getUser(name, password) {
     return new Promise((resolve, reject) => {
         
-        User.findOne({name: name, password: password}, function(error, user){
+        User.findOne({name: name, password: password, rmDate: null}, function(error, user){
 
             if(error){
                 resolve(new UserDTO('', name, LogInStatus.error));
