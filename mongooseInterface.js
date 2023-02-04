@@ -82,6 +82,7 @@ const DTOStatus = {
 
 exports.DTOStatus = DTOStatus;
 
+
 const LogInStatus = {
     loggedin: 0,
     userNotFound: 1,
@@ -89,6 +90,7 @@ const LogInStatus = {
 }
 
 exports.LogInStatus = LogInStatus;
+
 
 
 /* ==== CREATE DTO CONSTRUCTORS AND EXPORTS ==== */
@@ -124,19 +126,22 @@ class ItemDTO {
 
 // Export DTO constructors
 
-function createListDTO(name, userId, date, items) {
+function createListDTO (name, userId, date, items) {
     return new ListDTO('', name, userId, date, items, DTOStatus.new);
 }
 
-createItemDTO = function (name) {
+function createItemDTO (name) {
     return new ItemDTO('', name, DTOStatus.new);
 }
+
+exports.createListDTO = createListDTO;
+exports.createItemDTO = createItemDTO;
 
 
 
 /* ===== EXPORT CRUD OPERATIONS ===== */
 
-function getUser(name, password) {
+function getUser (name, password) {
 
     return new Promise((resolve, reject) => {
 
@@ -158,7 +163,7 @@ function getUser(name, password) {
 
 
 
-function getAllUserLists(userDTO) {
+function getAllUserLists (userDTO) {
 
     return new Promise((resolve, reject) => {
 
@@ -217,7 +222,8 @@ function getAllUserLists(userDTO) {
     });
 }
 
-function getListByName(listName, userID) {
+
+function getListByName (listName, userID) {
 
     return new Promise((resolve, reject) => {
 
@@ -271,13 +277,10 @@ function getListByName(listName, userID) {
         })
     })
 
-
-
-
 }
 
 
-saveList = function (listDTO) {
+function saveList (listDTO) {
 
     if (listDTO.status === DTOStatus.new) {
         console.log('creating list');
@@ -293,6 +296,13 @@ saveList = function (listDTO) {
     }
 
 }
+
+/* Exports */
+
+exports.getUser = getUser;
+exports.getAllUserLists = getAllUserLists;
+exports.getListByName = getListByName;
+exports.saveList = saveList;
 
 /* === SAVE LIST AUXILIARY OPERATIONS === */
 
@@ -352,19 +362,19 @@ function modifyList(listDTO) {
                 list.name = listDTO.name;
                 list.date = listDTO.date;
 
+                const itemPromises = [];
+
                 listDTO.items.forEach(itemDTO => {
 
                     if (itemDTO.status === DTOStatus.new) {
 
                         const item = new Item({
                             name: itemDTO.name,
-                            ckecked: itemDTO.checked,
                             list: list
                         });
 
-                        item.save();
+                        itemPromises.push(item.save());
                         console.log('Item created: ' + item.name);
-                        resolve('Item created: ' + item.name);
 
 
                     } else if (itemDTO.status === DTOStatus.modified
@@ -382,21 +392,24 @@ function modifyList(listDTO) {
 
                                 if (itemDTO.status === DTOStatus.modified) {
                                     item.name = itemDTO.name;
-                                    item.checked = itemDTO.checked;
                                     console.log("item modified: " + item.name);
 
                                 } else if (itemDTO.status === DTOStatus.removed) {
                                     item.rmDate = new Date();
                                     console.log("item removed: " + item.name);
-
                                 }
 
-                                item.save();
+                                itemPromises.push(item.save());
 
                             }
                         });
                     }
                 });
+
+                Promise.all(itemPromises).then(function () {
+                    resolve();
+                });
+
             }
         });
     })
@@ -421,7 +434,7 @@ function removeList(listDTO) {
                 list.rmDate = new Date();
                 console.log("list " + listDTO.name + " was removed");
 
-                Promise.all([list.save()]).then(function (value) {
+                list.save().then(function () {
                     resolve("list " + listDTO.name + " was removed");
                 })
             }
@@ -469,67 +482,7 @@ exports.getStringDate = getStringDate;
 
 /* TEST TRANSACTIONS */
 
-// let listDTOsample = getListByName("Wednesday, February 1");
-// let listDTOsample = getListByName(getStringDate(new Date()));
-
-// listDTOsample.then(function (value) {
-// console.log(value);
-// const itemDTO = new ItemDTO('', 'vanilla3', false);
-// addItemToList(value, itemDTO);
-// rm = removeItemFromList(value.items[value.items.length - 1]);
-// rm.then(function (ret) {
-// console.log(rm);
-// })
-// })
-
-// const listDTO = new ListDTO("", getStringDate(today), today, 'test', items, DTOStatus.new);
-// const listDTO = new ListDTO("", 'test', today, 'test', items);
-// saveList(listDTO);
-
-
-/*
-const items = [
-    createItemDTO('pear'),
-    createItemDTO('banana'),
-    createItemDTO('peach'),
-    createItemDTO('apple')
-]
-
-// const newItem = createItemDTO('orange');
 /* 
-getListByName('fruits').then(function (list) {
-    // list.items.push(newItem);
-    list.status = DTOStatus.removed;
-    // list.items[0].name = 'orange';
-    // list.items[0].status = DTOStatus.removed; 
-
-    // console.log(list);
-    saveList(list);
-});
- */
-
-/* 
-getListByName('fruits').then(function (list) {
-    
-   list.items.forEach(item => {
-    console.log(item.name);
-   }); 
-});
- */
-/* 
-getAllLists().then(function (lists) {
-    lists.forEach(list => {
-        console.log(list.items);
-    });
-})
-
- */
-
-
-
-
-
-
 getUser('test', 'test').then(function (userDTO) {
     if (userDTO.status === LogInStatus.loggedin) {
         // const listDTO = createListDTO('testList2', userDTO.id, new Date(), []);
@@ -539,8 +492,15 @@ getUser('test', 'test').then(function (userDTO) {
             // console.log(listDTOs);
         // });
 
-        getListByName('list1', userDTO.id).then(function(listDTO){
+        getListByName('testList2', userDTO.id).then(function(listDTO){
+            // listDTO.items[0].name = 'banana';
+            // listDTO.items[0].status = DTOStatus.removed;
+            // const itemDTO = createItemDTO('sausage');
+            // listDTO.items.push(itemDTO);
+            // listDTO.status = DTOStatus.removed;
+            // saveList(listDTO);
             console.log(listDTO);
         });
     }
 }); 
+ */
