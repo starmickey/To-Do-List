@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const lodash = require("lodash");
 
 
 /* ========= CONNECT TO DATABASE ========= */
@@ -127,7 +128,7 @@ class ItemDTO {
 // Export DTO constructors
 
 function createListDTO (name, userId, date, items) {
-    return new ListDTO('', name, userId, date, items, DTOStatus.new);
+    return new ListDTO('', lodash.lowerCase(name), userId, date, items, DTOStatus.new);
 }
 
 function createItemDTO (name) {

@@ -5,6 +5,8 @@ const bodyParser = require("body-parser");
 const { LogInStatus } = require("./mongooseInterface");
 const { DTOStatus } = require(__dirname + "/mongooseInterface.js");
 const mongoose = require(__dirname + "/mongooseInterface.js");
+const lodash = require('lodash');
+const { kebabCase } = require("lodash");
 
 
 /* ======= CONFIG EXPRESS APP ======= */
@@ -14,19 +16,20 @@ const app = express();
 app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static("public"));
+app.use(express.static(__dirname + '/public'));
 
 
 /* AUXILIARY VARS AND METHODS */
 
 class ListUI {
-  constructor(name, items) {
+  constructor(name, items, route) {
     this.name = name;
     this.items = items;
+    this.route = route;
   }
 }
 
-let actualListUI;
+let actualListDTO;
 let actualUserDTO;
 
 
@@ -60,7 +63,7 @@ app.get("/", function (req, res) {
           items.push(itemDTO.name);
         });
 
-        lists.push(new ListUI(listDTO.name, items));
+        lists.push(new ListUI(listDTO.name, items, lodash.kebabCase(listDTO.name)));
       });
 
       res.render("home", { lists: lists });
@@ -72,9 +75,9 @@ app.get("/", function (req, res) {
 })
 
 
-app.get("/today", function (req, res) {
+app.get("/list", function (req, res) {
 
-  const reqListName = mongoose.getStringDate(new Date());
+  const reqListName = lodash.lowerCase(req.query.title);
 
   mongoose.getUser('test', 'test').then(function (userDTO) {
     mongoose.getListByName(reqListName, userDTO.id).then(function (foundList) {
@@ -85,13 +88,15 @@ app.get("/today", function (req, res) {
 
       let itemsNames = [];
 
+      actualListDTO = foundList;
+      
       foundList.items.forEach(item => {
         itemsNames.push(item.name);
       });
 
-      actualListUI = new ListUI(foundList.name, itemsNames);
+      const listUI = new ListUI(foundList.name, itemsNames, lodash.kebabCase(foundList.name));
 
-      res.render("list", { list: actualListUI });
+      res.render("list", { list: listUI });
 
     });
   });
@@ -99,14 +104,14 @@ app.get("/today", function (req, res) {
 });
 
 
-app.post("/today", function (req, res) {
+app.post("/list", function (req, res) {
 
   const newItem = mongoose.createItemDTO(req.body.newItem);
-  actualListUI.items.push(newItem);
-  actualListUI.status = DTOStatus.modified;
-  mongoose.saveList(actualListUI);
+  actualListDTO.items.push(newItem);
+  actualListDTO.status = DTOStatus.modified;
+  mongoose.saveList(actualListDTO);
 
-  res.redirect("/");
+  res.redirect("/list?title=" + req.query.title);
 
 });
 

@@ -1,5 +1,6 @@
 <%- include("header") -%>
 
+
 <div class="box heading" id="main-heading">
   <h1> <%= list.name %> </h1>
 </div>
@@ -12,7 +13,7 @@
   </div>
   <% }) %>
 
-  <form class="item" action="/today" method="post">
+  <form class="item" action="/list?title=<%= list.route %> " method="post">
     <input type="text" name="newItem" placeholder="New Item" autocomplete="off" style="width: 313px;">
     <button type="submit" name="list">+</button>
   </form>
