@@ -3,10 +3,9 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const { LogInStatus } = require("./mongooseInterface");
-const { DTOStatus } = require(__dirname + "/mongooseInterface.js");
 const mongoose = require(__dirname + "/mongooseInterface.js");
-const lodash = require('lodash');
-const { kebabCase } = require("lodash");
+const lodash = require("lodash");
+
 
 
 /* ======= CONFIG EXPRESS APP ======= */
@@ -22,15 +21,22 @@ app.use(express.static(__dirname + '/public'));
 /* AUXILIARY VARS AND METHODS */
 
 class ListUI {
-  constructor(name, items, route) {
+  constructor(id, name, items, route) {
+    this.id = id;
     this.name = name;
     this.items = items;
-    this.route = route;
   }
 }
 
-let actualListDTO;
+class ItemUI {
+  constructor(id, name) {
+    this.id = id;
+    this.name = name;
+  }
+}
+
 let actualUserDTO;
+let actualListDTO;
 
 
 /* ====== APP EVENTS' HANDLERS ====== */
@@ -61,19 +67,19 @@ app.get("/", function (req, res) {
   } else {
 
     mongoose.getAllUserLists(actualUserDTO).then(function (listDTOs) {
-      const lists = [];
+      const listUIs = [];
 
       listDTOs.forEach(listDTO => {
-        const items = [];
+        const itemUIs = [];
 
         listDTO.items.forEach(itemDTO => {
-          items.push(itemDTO.name);
+          itemUIs.push(new ItemUI(itemDTO.id, itemDTO.name));
         });
 
-        lists.push(new ListUI(listDTO.name, items, lodash.kebabCase(listDTO.name)));
+        listUIs.push(new ListUI(listDTO.id, listDTO.name, itemUIs, lodash.kebabCase(listDTO.name)));
       });
 
-      res.render("home", { lists: lists });
+      res.render("home", { lists: listUIs });
     });
   }
 })
@@ -88,24 +94,22 @@ app.get("/list", function (req, res) {
     res.redirect("/login");
 
   } else {
-    
-    const reqListName = lodash.lowerCase(req.query.title);
 
-    mongoose.getListByName(reqListName, actualUserDTO.id).then(function (foundList) {
+    mongoose.getListById(req.query.id).then(function (foundList) {
       if (foundList === null) {
         foundList = mongoose.createListDTO(reqListName, actualUserDTO.id, new Date(), []);
         mongoose.saveList(foundList);
       }
 
-      let itemsNames = [];
+      let itemUIs = [];
 
       actualListDTO = foundList;
 
       foundList.items.forEach(item => {
-        itemsNames.push(item.name);
+        itemUIs.push(new ItemUI(item.id, item.name));
       });
 
-      const listUI = new ListUI(foundList.name, itemsNames, lodash.kebabCase(foundList.name));
+      const listUI = new ListUI(foundList.id, foundList.name, itemUIs);
 
       res.render("list", { list: listUI });
 
@@ -117,12 +121,18 @@ app.get("/list", function (req, res) {
 
 app.post("/list", function (req, res) {
 
-  const newItem = mongoose.createItemDTO(req.body.newItem);
-  actualListDTO.items.push(newItem);
-  actualListDTO.status = DTOStatus.modified;
-  mongoose.saveList(actualListDTO);
+  if (req.query.action === 'addItem') {
+    const newItem = mongoose.createItemDTO(req.body.itemName);
+    actualListDTO = mongoose.addItemDTOToListDTO(actualListDTO, newItem);
+    mongoose.saveList(actualListDTO).then(function (listDTO) {
+      actualListDTO = listDTO;
+    });
 
-  res.redirect("/list?title=" + req.query.title);
+  } else if (req.query.action === 'removeItem') {
+    const itemId = req.body.itemId;
+  }
+
+  res.redirect("/list?id=" + req.query.id);
 
 });
 

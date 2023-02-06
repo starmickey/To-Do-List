@@ -7,14 +7,17 @@
 
 <div class="box">
   <% list.items.forEach(item => { %>
-  <div class="item">
-    <input type="checkbox">
-    <p><%=  item  %></p>
-  </div>
+
+  <form class="item" action="/list?id=<%= list.id %>&action=removeItem" method="post">
+    <input type="checkbox" name="itemId" value="<%= item.id %> " onChange="this.form.submit()">
+    <p><%=  item.name  %></p>
+  </form>
+
   <% }) %>
 
-  <form class="item" action="/list?title=<%= list.route %> " method="post">
-    <input type="text" name="newItem" placeholder="New Item" autocomplete="off" style="width: 313px; text-align: center;">
+
+  <form class="item" action="/list?id=<%= list.id %>&action=addItem" method="post">
+    <input type="text" name="itemName" placeholder="New Item" autocomplete="off" style="width: 313px; text-align: center;">
     <button type="submit" name="list">+</button>
   </form>
 </div>

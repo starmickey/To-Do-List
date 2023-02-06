@@ -11,7 +11,7 @@
     <% lists.forEach(list=> { %>
 
     <div class="col-lg-4 col-md-6 col-sm-12 px-4">
-      <a class="list-button" href="/list?title=<%= list.route %> " role="button">
+      <a class="list-button" href="/list?id=<%= list.id %> " role="button">
         <div class="box heading">
           <h2>
             <%= list.name %>
@@ -26,7 +26,7 @@
           <% let item=list.items[index] %>
           <div class="item">
             <p>
-              <%= item %>
+              <%= item.name %>
             </p>
           </div>
           <% index++ %>
