@@ -535,16 +535,9 @@ exports.getStringDate = getStringDate;
 //             // console.log(listDTOs);
 //         // });
 
-        getListById("63dea94872f2e6d223ebc53e").then(function(listDTO){
-//             // listDTO.items[0].name = 'banana';
-//             // listDTO.items[0].status = DTOStatus.removed;
-//             const itemDTO = createItemDTO('sausage');
-//             listDTO.items.push(itemDTO);
-//             listDTO.status = DTOStatus.modified;
-//             saveList(listDTO).then(function (listDTO) {
-                console.log(listDTO);
-//             });
-        });
+        // getListById("63dea94872f2e6d223ebc53e").then(function(listDTO){
+                // console.log(listDTO);
+        // });
     // }
 // }); 
 
