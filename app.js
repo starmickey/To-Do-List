@@ -87,13 +87,13 @@ app.get("/", function (req, res) {
 
 app.get("/list", function (req, res) {
 
-  if (actualUserDTO === undefined) {
-    res.redirect("/login");
+  // if (actualUserDTO === undefined) {
+  //   res.redirect("/login");
 
-  } else if (actualUserDTO.status !== LogInStatus.loggedin) {
-    res.redirect("/login");
+  // } else if (actualUserDTO.status !== LogInStatus.loggedin) {
+  //   res.redirect("/login");
 
-  } else {
+  // } else {
 
     mongoose.getListById(req.query.id).then(function (foundList) {
       if (foundList === null) {
@@ -114,7 +114,7 @@ app.get("/list", function (req, res) {
       res.render("list", { list: listUI });
 
     });
-  }
+  // }
 
 });
 
@@ -122,15 +122,20 @@ app.get("/list", function (req, res) {
 app.post("/list", function (req, res) {
 
   if (req.query.action === 'addItem') {
-    const newItem = mongoose.createItemDTO(req.body.itemName);
-    actualListDTO = mongoose.addItemDTOToListDTO(actualListDTO, newItem);
-    mongoose.saveList(actualListDTO).then(function (listDTO) {
-      actualListDTO = listDTO;
-    });
+    const newItemDTO = mongoose.createItemDTO(req.body.itemName);
+    actualListDTO = mongoose.addItemDTOToListDTO(actualListDTO, newItemDTO);
 
   } else if (req.query.action === 'removeItem') {
     const itemId = req.body.itemId;
+    const itemDTO = actualListDTO.items.find(({id}) => lodash.kebabCase(itemId) === lodash.kebabCase(id));
+    actualListDTO = mongoose.removeItemDTOFromListDTO(actualListDTO, itemDTO);
+    
   }
+
+  mongoose.saveList(actualListDTO).then(function (listDTO) {
+    actualListDTO = listDTO;
+  });
+
 
   res.redirect("/list?id=" + req.query.id);
 
