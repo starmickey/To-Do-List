@@ -130,7 +130,7 @@ function listToListDTO(list) {
     return new Promise((resolve, reject) => {
         const itemDTOs = [];
 
-        Item.find({ list: list }, function (error, items) {
+        Item.find({ list: list, rmDate: null }, function (error, items) {
 
             if (error) {
                 reject(error);
@@ -287,20 +287,8 @@ function getListById(listId) {
                 resolve(null);
 
             } else {
-                let list = lists[0];
-
-                Item.find({ list: list, rmDate: null }, function (itemError, items) {
-
-                    if (itemError) {
-                        console.log('finding item error');
-                        reject(itemError);
-
-                    } else {
-                        listToListDTO(list).then(function (listDTO) {
-                            resolve(listDTO);
-                        });
-                    }
-
+                listToListDTO(lists[0]).then(function (listDTO) {
+                    resolve(listDTO);
                 });
 
             }
@@ -375,7 +363,10 @@ function createList(listDTO) {
                     });
 
                     console.log('list created: ' + list.name);
-                    resolve(listToListDTO(list));
+                    
+                    listToListDTO(list).then(function (listDTO) {
+                        resolve(listDTO);
+                    });
                 });
 
             }
@@ -452,7 +443,7 @@ function modifyList(listDTO) {
                 Promise.all(itemPromises).then(function () {
                     listToListDTO(list).then(function (listDTO) {
                         resolve(listDTO);
-                    })
+                    });
                 });
 
             }
