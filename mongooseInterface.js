@@ -10,6 +10,7 @@ async function connectMongoose() {
     const DATABASE_NAME = "todolistDB";
     mongoose.set("strictQuery", false);
     await mongoose.connect('mongodb://127.0.0.1:27017/' + DATABASE_NAME);
+    console.log("mongoose connection established succesfully");
 }
 
 
@@ -123,20 +124,44 @@ class ItemDTO {
     }
 }
 
+// Private constructors
+
+function listToListDTO (list) {
+    return new Promise((resolve, reject) => {
+        const itemDTOs = [];
+
+        Item.find({list: list}, function(error, items){
+
+            if(error){
+                reject(error);
+
+            } else {
+                items.forEach(item => {
+                    itemDTOs.push(itemToItemDTO(item));
+                });
+
+                resolve(new ListDTO(list.id, list.name, list.user.id,
+                    list.date, itemDTOs, DTOStatus.unmodified));
+            }
+        });
+    })
+}
+
+function itemToItemDTO (item) {
+    return new ItemDTO(item.id, item.name, DTOStatus.unmodified);
+}
 
 
 // Export DTO constructors
 
-function createListDTO (name, userId, date, items) {
+exports.createListDTO = function (name, userId, date, items) {
     return new ListDTO('', lodash.lowerCase(name), userId, date, items, DTOStatus.new);
 }
 
-function createItemDTO (name) {
+exports.createItemDTO = function (name) {
     return new ItemDTO('', name, DTOStatus.new);
 }
 
-exports.createListDTO = createListDTO;
-exports.createItemDTO = createItemDTO;
 
 
 
@@ -463,7 +488,6 @@ exports.getStringDate = getStringDate;
 
 
 
-
 /* INITIALIZE DATABASE */
 
 // const testUser = new User({name: 'test', password: 'test'});
@@ -471,13 +495,26 @@ exports.getStringDate = getStringDate;
 
 // const testUser = User.findOne({name: 'test'}, function(err, user){
 //     // console.log(user);
-//     const testList = new List({name: 'list1', date: new Date(), user: user});
-//     testList.save();
+//     const testList = new List({name: 'listaprueba', date: new Date(), user: user});
+//     testList.save().then(function(list){
+//         console.log(list);
+//     });
 // });
 
-// List.findOne({name: 'list1'}, function(err, list){
-// const testItem = new Item({name: 'testItem1', list: list});
+// List.findOne({name: 'listaprueba'}, function(err, list){
+// const testItem = new Item({name: 'testItem2', list: list});
 // testItem.save();
+// listToListDTO(list).then(function(listDTO){
+//     console.log(listDTO);
+// })
+// Item.find({list: list}, function (err, items){
+//     if(!err){
+//         items.forEach(item => {
+//         console.log(itemToItemDTO(item));
+            
+//         });
+//     }
+// })
 // })
 
 
