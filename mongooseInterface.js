@@ -126,13 +126,13 @@ class ItemDTO {
 
 // Private constructors
 
-function listToListDTO (list) {
+function listToListDTO(list) {
     return new Promise((resolve, reject) => {
         const itemDTOs = [];
 
-        Item.find({list: list}, function(error, items){
+        Item.find({ list: list }, function (error, items) {
 
-            if(error){
+            if (error) {
                 reject(error);
 
             } else {
@@ -147,18 +147,18 @@ function listToListDTO (list) {
     })
 }
 
-function itemToItemDTO (item) {
+function itemToItemDTO(item) {
     return new ItemDTO(item.id, item.name, DTOStatus.unmodified);
 }
 
 
 // Export DTO constructors
 
-function createListDTO (name, userId, date, items) {
+function createListDTO(name, userId, date, items) {
     return new ListDTO('', lodash.lowerCase(name), userId, date, items, DTOStatus.new);
 }
 
-function createItemDTO (name) {
+function createItemDTO(name) {
     return new ItemDTO('', name, DTOStatus.new);
 }
 
@@ -193,9 +193,11 @@ exports.addItemDTOToListDTO = addItemDTOToListDTO;
 exports.removeItemDTOFromListDTO = removeItemDTOFromListDTO;
 
 
+
+
 /* ===== EXPORT CRUD OPERATIONS ===== */
 
-function getUser (name, password) {
+function getUser(name, password) {
 
     return new Promise((resolve, reject) => {
 
@@ -217,7 +219,7 @@ function getUser (name, password) {
 
 
 
-function getAllUserLists (userDTO) {
+function getAllUserLists(userDTO) {
 
     return new Promise((resolve, reject) => {
 
@@ -258,64 +260,47 @@ function getAllUserLists (userDTO) {
 }
 
 
-function getListByName (listName, userID) {
+function getListById(listId) {
 
     return new Promise((resolve, reject) => {
 
-        User.findOne({ _id: userID, rmDate: null }, function (userError, user) {
-            if (userError) {
-                reject(userError);
+        List.find({ _id: listId, rmDate: null }, function (listError, lists) {
 
-            } else if (user === null) {
-                reject('user of ' + listName + 'not found');
+            if (listError) {
+                reject(listError);
+
+            } else if (lists.length === 0) {
+                console.log("list " + listName + " not found");
+
+                resolve(null);
 
             } else {
+                let list = lists[0];
 
-                List.find({ name: listName, user: user, rmDate: null }, function (listError, lists) {
+                Item.find({ list: list, rmDate: null }, function (itemError, items) {
 
-                    if (listError) {
-                        reject(listError);
-
-                    } else if (lists.length === 0) {
-                        console.log("list " + listName + " not found");
-
-                        resolve(null);
+                    if (itemError) {
+                        reject(itemError);
 
                     } else {
-                        let list = lists[0];
 
-                        Item.find({ list: list, rmDate: null }, function (itemError, items) {
-
-                            if (itemError) {
-                                reject(itemError);
-
-                            } else {
-
-                                const itemsDTO = [];
-
-                                items.forEach(item => {
-                                    itemsDTO.push(new ItemDTO(item.id, item.name,
-                                        DTOStatus.unmodified));
-                                });
-
-                                resolve(new ListDTO(list.id, list.name, user.id, list.date,
-                                    itemsDTO, DTOStatus.unmodified));
-                            }
-
+                        listToListDTO(list).then(function (listDTO) {
+                            resolve(listDTO);
                         });
-
                     }
 
                 });
 
             }
-        })
+
+        });
+
     })
 
 }
 
 
-function saveList (listDTO) {
+function saveList(listDTO) {
 
     return new Promise((resolve, reject) => {
         if (listDTO.status === DTOStatus.new) {
@@ -323,20 +308,20 @@ function saveList (listDTO) {
             createList(listDTO).then(function (listDTO) {
                 resolve(listDTO);
             });
-    
+
         } else if (listDTO.status === DTOStatus.modified) {
             console.log('modifying list');
             modifyList(listDTO).then(function (listDTO) {
                 resolve(listDTO);
             });
-    
+
         } else if (listDTO.status === DTOStatus.removed) {
             console.log('removing list');
             removeList(listDTO).then(function (listDTO) {
                 resolve(listDTO);
             });
         }
-        
+
     })
 }
 
@@ -344,7 +329,7 @@ function saveList (listDTO) {
 
 exports.getUser = getUser;
 exports.getAllUserLists = getAllUserLists;
-exports.getListByName = getListByName;
+exports.getListById = getListById;
 exports.saveList = saveList;
 
 
@@ -452,7 +437,7 @@ function modifyList(listDTO) {
                 });
 
                 Promise.all(itemPromises).then(function () {
-                    listToListDTO(list).then(function (listDTO){
+                    listToListDTO(list).then(function (listDTO) {
                         resolve(listDTO);
                     })
                 });
@@ -550,17 +535,17 @@ exports.getStringDate = getStringDate;
 //             // console.log(listDTOs);
 //         // });
 
-//         getListByName('test list 4', userDTO.id).then(function(listDTO){
+        getListById("63dea94872f2e6d223ebc53e").then(function(listDTO){
 //             // listDTO.items[0].name = 'banana';
 //             // listDTO.items[0].status = DTOStatus.removed;
 //             const itemDTO = createItemDTO('sausage');
 //             listDTO.items.push(itemDTO);
 //             listDTO.status = DTOStatus.modified;
 //             saveList(listDTO).then(function (listDTO) {
-//                 console.log(listDTO)
+                console.log(listDTO);
 //             });
-//         });
+        });
     // }
 // }); 
- 
+
 
