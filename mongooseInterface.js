@@ -154,15 +154,43 @@ function itemToItemDTO (item) {
 
 // Export DTO constructors
 
-exports.createListDTO = function (name, userId, date, items) {
+function createListDTO (name, userId, date, items) {
     return new ListDTO('', lodash.lowerCase(name), userId, date, items, DTOStatus.new);
 }
 
-exports.createItemDTO = function (name) {
+function createItemDTO (name) {
     return new ItemDTO('', name, DTOStatus.new);
 }
 
+function addItemDTOToListDTO(listDTO, itemDTO) {
+    listDTO.items.push(itemDTO);
+    listDTO.status = DTOStatus.modified;
+    return listDTO;
+}
 
+function removeItemDTOFromListDTO(listDTO, itemDTO) {
+    let index = 0;
+    let found = false;
+
+    while (index < listDTO.items.length && !found) {
+        let item = listDTO.items[index];
+
+        if (item.name === itemDTO.name && item.status !== DTOStatus.removed) {
+            found = true;
+            listDTO.items[index].status = DTOStatus.removed;
+            listDTO.status = DTOStatus.modified;
+        }
+
+        index++;
+    }
+
+    return listDTO;
+}
+
+exports.createListDTO = createListDTO;
+exports.createItemDTO = createItemDTO;
+exports.addItemDTOToListDTO = addItemDTOToListDTO;
+exports.removeItemDTOFromListDTO = removeItemDTOFromListDTO;
 
 
 /* ===== EXPORT CRUD OPERATIONS ===== */
@@ -210,34 +238,15 @@ function getAllUserLists (userDTO) {
                         reject(listError);
 
                     } else {
-                        const itemPromises = [];
+                        const listPromises = [];
 
                         lists.forEach(list => {
-
-                            const itemDTOs = [];
-
-                            itemPromises.push(new Promise((res, rej) => {
-
-                                Item.find({ list: list, rmDate: null }, function (err, items) {
-
-                                    if (err) {
-                                        rej(err);
-
-                                    } else {
-                                        items.forEach(item => {
-                                            itemDTOs.push(new ItemDTO(item.id, item.name, DTOStatus.unmodified));
-                                        });
-
-                                        listDTOs.push(new ListDTO(list.id, list.name, user.id, list.date, itemDTOs, DTOStatus.unmodified));
-                                        res();
-                                    }
-
-                                });
-
+                            listPromises.push(listToListDTO(list).then(function (listDTO) {
+                                listDTOs.push(listDTO);
                             }));
                         });
 
-                        Promise.all(itemPromises).then(function () {
+                        Promise.all(listPromises).then(function () {
                             resolve(listDTOs);
                         });
                     }
@@ -308,19 +317,27 @@ function getListByName (listName, userID) {
 
 function saveList (listDTO) {
 
-    if (listDTO.status === DTOStatus.new) {
-        console.log('creating list');
-        createList(listDTO);
-
-    } else if (listDTO.status === DTOStatus.modified) {
-        console.log('modifying list');
-        modifyList(listDTO);
-
-    } else if (listDTO.status === DTOStatus.removed) {
-        console.log('removing list');
-        removeList(listDTO);
-    }
-
+    return new Promise((resolve, reject) => {
+        if (listDTO.status === DTOStatus.new) {
+            console.log('creating list');
+            createList(listDTO).then(function (listDTO) {
+                resolve(listDTO);
+            });
+    
+        } else if (listDTO.status === DTOStatus.modified) {
+            console.log('modifying list');
+            modifyList(listDTO).then(function (listDTO) {
+                resolve(listDTO);
+            });
+    
+        } else if (listDTO.status === DTOStatus.removed) {
+            console.log('removing list');
+            removeList(listDTO).then(function (listDTO) {
+                resolve(listDTO);
+            });
+        }
+        
+    })
 }
 
 /* Exports */
@@ -329,6 +346,9 @@ exports.getUser = getUser;
 exports.getAllUserLists = getAllUserLists;
 exports.getListByName = getListByName;
 exports.saveList = saveList;
+
+
+
 
 /* === SAVE LIST AUXILIARY OPERATIONS === */
 
@@ -349,8 +369,6 @@ function createList(listDTO) {
 
                 Promise.all([list.save()]).then(function () {
 
-                    console.log('list created: ' + list.name);
-
                     listDTO.items.forEach(itemDTO => {
                         const item = new Item({ name: itemDTO.name, list: list });
                         item.save().then(function () {
@@ -358,7 +376,8 @@ function createList(listDTO) {
                         });
                     });
 
-                    resolve('list created: ' + list.name);
+                    console.log('list created: ' + list.name);
+                    resolve(listToListDTO(list));
                 });
 
             }
@@ -433,7 +452,9 @@ function modifyList(listDTO) {
                 });
 
                 Promise.all(itemPromises).then(function () {
-                    resolve();
+                    listToListDTO(list).then(function (listDTO){
+                        resolve(listDTO);
+                    })
                 });
 
             }
@@ -461,7 +482,7 @@ function removeList(listDTO) {
                 console.log("list " + listDTO.name + " was removed");
 
                 list.save().then(function () {
-                    resolve("list " + listDTO.name + " was removed");
+                    resolve(null);
                 })
             }
         });
@@ -504,17 +525,6 @@ exports.getStringDate = getStringDate;
 // List.findOne({name: 'listaprueba'}, function(err, list){
 // const testItem = new Item({name: 'testItem2', list: list});
 // testItem.save();
-// listToListDTO(list).then(function(listDTO){
-//     console.log(listDTO);
-// })
-// Item.find({list: list}, function (err, items){
-//     if(!err){
-//         items.forEach(item => {
-//         console.log(itemToItemDTO(item));
-            
-//         });
-//     }
-// })
 // })
 
 
@@ -522,25 +532,35 @@ exports.getStringDate = getStringDate;
 
 /* TEST TRANSACTIONS */
 
-/* 
-getUser('test', 'test').then(function (userDTO) {
-    if (userDTO.status === LogInStatus.loggedin) {
-        // const listDTO = createListDTO('testList2', userDTO.id, new Date(), []);
-        // saveList(listDTO);
 
-        // getAllUserLists(userDTO).then(function(listDTOs){
-            // console.log(listDTOs);
-        // });
+// getUser('test', 'test').then(function (userDTO) {
+//     if (userDTO.status === LogInStatus.loggedin) {
+//         let listDTO = createListDTO('testList4', userDTO.id, new Date(), []);
+//         listDTO = addItemDTOToListDTO(listDTO, createItemDTO('pear'));
+//         listDTO = addItemDTOToListDTO(listDTO, createItemDTO('pear'));
+//         listDTO = addItemDTOToListDTO(listDTO, createItemDTO('orange'));
+//         listDTO = removeItemDTOFromListDTO(listDTO, itemDTO);
+//         console.log(listDTO);
 
-        getListByName('testList2', userDTO.id).then(function(listDTO){
-            // listDTO.items[0].name = 'banana';
-            // listDTO.items[0].status = DTOStatus.removed;
-            // const itemDTO = createItemDTO('sausage');
-            // listDTO.items.push(itemDTO);
-            // listDTO.status = DTOStatus.removed;
-            // saveList(listDTO);
-            console.log(listDTO);
-        });
-    }
-}); 
- */
+//         // saveList(listDTO).then(function (listDTO) {
+//             // console.log(listDTO);
+//         // });
+
+//         // getAllUserLists(userDTO).then(function(listDTOs){
+//             // console.log(listDTOs);
+//         // });
+
+//         getListByName('test list 4', userDTO.id).then(function(listDTO){
+//             // listDTO.items[0].name = 'banana';
+//             // listDTO.items[0].status = DTOStatus.removed;
+//             const itemDTO = createItemDTO('sausage');
+//             listDTO.items.push(itemDTO);
+//             listDTO.status = DTOStatus.modified;
+//             saveList(listDTO).then(function (listDTO) {
+//                 console.log(listDTO)
+//             });
+//         });
+    // }
+// }); 
+ 
+
