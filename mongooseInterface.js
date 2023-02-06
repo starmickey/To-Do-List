@@ -73,7 +73,7 @@ const Item = new mongoose.model('Item', itemSchema);
 
 
 
-/* ================ CONSTRAINTS ================ */
+/* ============ CREATE PUBLIC CONSTRAINTS ============ */
 
 const DTOStatus = {
     unmodified: 0,
@@ -92,6 +92,7 @@ const LogInStatus = {
 }
 
 exports.LogInStatus = LogInStatus;
+
 
 
 
@@ -152,7 +153,7 @@ function itemToItemDTO(item) {
 }
 
 
-// Export DTO constructors
+// Public DTO constructors
 
 function createListDTO(name, userId, date, items) {
     return new ListDTO('', lodash.lowerCase(name), userId, date, items, DTOStatus.new);
@@ -172,6 +173,8 @@ function removeItemDTOFromListDTO(listDTO, itemDTO) {
     let index = 0;
     let found = false;
 
+    // Removes only the first concidence found
+
     while (index < listDTO.items.length && !found) {
         let item = listDTO.items[index];
 
@@ -186,6 +189,7 @@ function removeItemDTOFromListDTO(listDTO, itemDTO) {
 
     return listDTO;
 }
+
 
 exports.createListDTO = createListDTO;
 exports.createItemDTO = createItemDTO;
@@ -204,12 +208,15 @@ function getUser(name, password) {
         User.findOne({ name: name, password: password, rmDate: null }, function (error, user) {
 
             if (error) {
+                console.log('log in error');
                 resolve(new UserDTO('', name, LogInStatus.error));
 
             } else if (user === null) {
+                console.log('log in error: user not found');
                 resolve(new UserDTO('', name, LogInStatus.userNotFound));
 
             } else {
+                console.log('log in successfull');
                 resolve(new UserDTO(user.id, user.name, LogInStatus.loggedin));
 
             }
@@ -226,17 +233,22 @@ function getAllUserLists(userDTO) {
         User.findOne({ _id: userDTO.id, rmDate: null }, function (userError, user) {
 
             if (userError) {
+                console.log('finding user error');
                 reject(userError);
 
             } else if (user === null) {
+                console.log('finding user error: user not found');
                 reject('user ' + userDTO.name + 'not found');
 
             } else {
                 const listDTOs = [];
 
+                console.log('finding user success: ' + user.name);
+
                 List.find({ user: user, rmDate: null }, function (listError, lists) {
 
                     if (listError) {
+                        console.log('finding list error');
                         reject(listError);
 
                     } else {
@@ -267,11 +279,11 @@ function getListById(listId) {
         List.find({ _id: listId, rmDate: null }, function (listError, lists) {
 
             if (listError) {
+                console.log('finding list error');
                 reject(listError);
 
             } else if (lists.length === 0) {
                 console.log("list " + listName + " not found");
-
                 resolve(null);
 
             } else {
@@ -280,10 +292,10 @@ function getListById(listId) {
                 Item.find({ list: list, rmDate: null }, function (itemError, items) {
 
                     if (itemError) {
+                        console.log('finding item error');
                         reject(itemError);
 
                     } else {
-
                         listToListDTO(list).then(function (listDTO) {
                             resolve(listDTO);
                         });
@@ -344,10 +356,11 @@ function createList(listDTO) {
         User.findOne({ _id: listDTO.userId, rmDate: null }, function (userError, user) {
 
             if (userError) {
+                console.log('finding user error: ');
                 reject(userError);
 
             } else if (user === null) {
-                reject('user not found: id ' + listDTO.userId);
+                reject('finding user error: user with id = ' + listDTO.userId + 'not found');
 
             } else {
                 const list = new List({ name: listDTO.name, date: listDTO.date, user: user });
@@ -380,7 +393,7 @@ function modifyList(listDTO) {
         List.findOne({ _id: listDTO.id, rmDate: null }, function (err, list) {
 
             if (err) {
-                console.log(err);
+                console.log('finding list error');
                 reject(err);
 
             } else if (list === null) {
@@ -455,7 +468,7 @@ function removeList(listDTO) {
         List.findOne({ _id: listDTO.id, rmDate: null }, function (err, list) {
 
             if (err) {
-                console.log(err);
+                console.log('finding list error');
                 reject(err);
 
             } else if (list === null) {
@@ -464,12 +477,13 @@ function removeList(listDTO) {
 
             } else {
                 list.rmDate = new Date();
-                console.log("list " + listDTO.name + " was removed");
+                console.log("list " + listDTO.name + " successfully removed");
 
                 list.save().then(function () {
                     resolve(null);
                 })
             }
+
         });
     });
 
