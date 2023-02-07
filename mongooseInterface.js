@@ -396,6 +396,8 @@ function modifyList(listDTO) {
                 list.name = listDTO.name;
                 list.date = listDTO.date;
 
+                list.save();
+
                 const itemPromises = [];
 
                 listDTO.items.forEach(itemDTO => {
