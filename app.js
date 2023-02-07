@@ -69,8 +69,27 @@ app.post("/login", function (req, res) {
 });
 
 app.get("/signup", function (req, res) {
-  res.render("signup");
+  res.render("signup", { message: '' });
 });
+
+app.post("/signup", function (req, res) {
+
+  mongoose.createUser(req.body.userName, req.body.password).then(function (userDTO) {
+
+    if (userDTO.status === UserStatus.signingUpExistingUser) {
+      res.render("signup", { message: 'That User Name already exists.' });
+
+    } else if (userDTO.status === UserStatus.loggedin) {
+      actualUserDTO = userDTO;
+      res.redirect("/");
+
+    } else {
+      res.render("signup", { message: 'Something went wrong. Please, try again.' });
+    }
+  })
+
+
+})
 
 app.get("/", function (req, res) {
 
@@ -150,7 +169,7 @@ app.post("/list", function (req, res) {
       mongoose.saveList(foundList);
     });
 
-      res.redirect("/");
+    res.redirect("/");
 
   } else {
 

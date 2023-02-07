@@ -240,6 +240,8 @@ function createUser(name, password){
             } else {
                 const newUser = new User({name: name, password: password});
                 newUser.save().then(function (user) {
+                    console.log('user created');
+                    console.log(user);
                     resolve(new UserDTO(user.id, user.name, UserStatus.loggedin));
                 })
 

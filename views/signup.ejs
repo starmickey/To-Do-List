@@ -1,6 +1,28 @@
 <%- include("partials/header") -%>
 <%- include("partials/navbar-start") -%>
 
-<h1>sign up</h1>
+<div class="box heading-box" id="main-heading">
+  <h1 class="heading">Create an account</h1>
+</div>
+
+<div class="box list-box">
+  <div class="form-signin w-100 m-auto py-2">
+    <p><%= message %></p>
+    <form action="/signup" method="post">
+      <div class="form-floating">
+        <input type="text" class="form-control" name="userName" id="floatingInput" placeholder="ana-banana">
+        <label for="floatingInput">User name</label>
+      </div>
+      <div class="form-floating">
+        <input type="password" class="form-control" name="password" id="floatingPassword" placeholder="Password">
+        <label for="floatingPassword">Password</label>
+      </div>
+  
+      <button class="w-100 btn btn-lg btn-primary mb-3" type="submit">Sign me up!</button>
+    </form>
+</div>
+  
+
+</div>
 
 <%- include("partials/footer") -%>
