@@ -87,13 +87,13 @@ app.get("/", function (req, res) {
 
 app.get("/list", function (req, res) {
 
-  if (actualUserDTO === undefined) {
-    res.redirect("/login");
+  // if (actualUserDTO === undefined) {
+  //   res.redirect("/login");
 
-  } else if (actualUserDTO.status !== LogInStatus.loggedin) {
-    res.redirect("/login");
+  // } else if (actualUserDTO.status !== LogInStatus.loggedin) {
+  //   res.redirect("/login");
 
-  } else {
+  // } else {
 
     mongoose.getListById(req.query.id).then(function (foundList) {
       if (foundList === null) {
@@ -114,7 +114,7 @@ app.get("/list", function (req, res) {
       res.render("list", { list: listUI });
 
     });
-  }
+  // }
 
 });
 
