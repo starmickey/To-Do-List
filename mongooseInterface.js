@@ -9,7 +9,6 @@ async function connectMongoose() {
     mongoose.set("strictQuery", false);
     // await mongoose.connect('mongodb://127.0.0.1:27017/' + DATABASE_NAME);
     await mongoose.connect('mongodb+srv://testUser:test@cluster0.7hp43y2.mongodb.net/todolistDB?retryWrites=true&w=majority');
-    console.log("mongoose connection established succesfully");
 }
 
 
