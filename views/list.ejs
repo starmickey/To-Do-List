@@ -2,11 +2,11 @@
 <%- include("partials/navbar-loggedin") -%>
 
 
-<div class="box heading" id="main-heading">
-  <h1> <%= list.name %> </h1>
+<div class="box heading-box" id="main-heading">
+  <h1 class="heading"> <%= list.name %> </h1>
 </div>
 
-<div class="box">
+<div class="box list-box">
   <% list.items.forEach(item => { %>
 
   <form class="item" action="/list?id=<%= list.id %>&action=removeItem" method="post">

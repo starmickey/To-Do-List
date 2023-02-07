@@ -1,8 +1,8 @@
 <%- include("partials/header") -%>
 <%- include("partials/navbar-loggedin") -%>
 
-<div class="box heading" id="main-heading">
-  <h1>Welcome</h1>
+<div class="box heading-box" id="main-heading">
+  <h1 class="heading">Welcome</h1>
 </div>
 
 <div class="container">
@@ -13,13 +13,11 @@
 
     <div class="col-lg-4 col-md-6 col-sm-12 px-4">
       <a class="list-button" href="/list?id=<%= list.id %> " role="button">
-        <div class="box heading">
-          <h2>
-            <%= list.name %>
-          </h2>
+        <div class="box heading-box">
+          <h2 class="heading"> <%= list.name %> </h2>
         </div>
 
-        <div class="box">
+        <div class="box list-box">
 
           <% let index=0 %>
           <% while (index < list.items.length && index < 3) { %>

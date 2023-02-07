@@ -1,8 +1,10 @@
 :root {
   --primary-color: #A683E3;
   --primary-color-hover: #b496e8;
-
+  --secondary-color: #E4E9FD;
 }
+
+/* ========= MAIN SECTIONS ========= */
 
 html {
   background-color: #E4E9FD;
@@ -12,27 +14,12 @@ html {
 }
 
 body {
-  background-color: rgba(0, 0, 0, 0);
+  background: transparent;
   font-weight: 200;
 }
 
-h1 {
-  color: #fff;
-  padding: 10px;
-  font-family: 'Karla', sans-serif;
-  font-weight: 800;
-}
 
-h2 {
-  color: #fff;
-  font-family: 'Karla', sans-serif;
-  font-weight: 700;
-  padding: 5px;
-}
-
-p {
-  font-family: 'Karla', sans-serif;
-}
+/* ========= SUBSECTIONS ========= */
 
 .navbar {
   background-color: #f3f5fd;
@@ -41,35 +28,66 @@ p {
   font-weight: 400;
 }
 
-.box {
-  max-width: 400px;
-  background: white;
-  border-radius: 5px;
-  box-shadow: 5px 5px 15px -5px rgba(0, 0, 0, 0.3);
-  margin: auto;
+
+footer {
+  color: rgba(0, 0, 0, 0.5);
+  text-align: center;
 }
 
-.list-button {
-  text-decoration: none;
-  width: 50px;
-}
+/* =========== TITLES =========== */
 
 #main-heading {
+  font-family: 'Karla', sans-serif;
+  font-weight: 800;
   margin: 50px auto;
 }
 
 .heading {
+  font-family: 'Karla', sans-serif;
+  font-weight: 700;
+  padding: 5px;
+}
+
+p {
+  color: #00204a;
+  font-family: 'Karla', sans-serif;
+  font-size: 20px;
+  font-weight: 200;
+  margin: 0;
+  padding: 20px;
+}
+
+
+/* ======= COMPONENTS ======= */
+
+/* --------- Boxes --------- */
+
+.box {
+  border-radius: 5px;
+  box-shadow: 5px 5px 15px -5px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+}
+
+.heading-box {
+  color: #fff;
   background-color: #A683E3;
   margin: 20px auto;
   padding: 10px;
   text-align: center;
 }
 
+.list-box {
+  background: white;
+  margin: auto;
+}
+
+/* --------- Items --------- */
+
 .item {
-  min-height: 70px;
-  display: flex;
   align-items: center;
   border-bottom: 1px solid #F1F1F1;
+  display: flex;
+  min-height: 70px;
 }
 
 .item:last-child {
@@ -77,37 +95,12 @@ p {
   margin-bottom: 50px;
 }
 
-input:checked+p {
-  text-decoration: line-through;
-  text-decoration-color: #A683E3;
-}
 
-input[type="checkbox"] {
-  margin: 20px;
-}
-
-p {
-  margin: 0;
-  padding: 20px;
-  font-size: 20px;
-  font-weight: 200;
-  color: #00204a;
-}
+/* --------- Inputs --------- */
 
 form {
-  text-align: center;
   margin: 10px;
-}
-
-button {
-  min-height: 50px;
-  border-radius: 50%;
-  border-color: transparent;
-  background-color: #A683E3;
-  color: #fff;
-  font-size: 30px;
-  padding-bottom: 6px;
-  border-width: 0;
+  text-align: center;
 }
 
 input[type="text"], input[type="password"] {
@@ -129,19 +122,43 @@ input[type="text"]:focus, input[type="password"]:focus{
   opacity: 1;
 }
 
-footer {
-  color: white;
-  color: rgba(0, 0, 0, 0.5);
-  text-align: center;
+
+input:checked+p {
+  text-decoration: line-through;
+  text-decoration-color: #A683E3;
 }
 
-.btn-primary, .btn-primary:hover, .btn-primary:active {
-  background-color: var(--primary-color-hover);
-  border-color: var(--primary-color-hover);
+input[type="checkbox"] {
+  margin: 20px;
 }
 
+
+/* --------- Buttons --------- */
+
+button {
+  min-height: 50px;
+  border-radius: 50%;
+  border-color: transparent;
+  border-width: 0;
+  background-color: #A683E3;
+
+  color: #fff;
+  font-size: 30px;
+
+  padding-bottom: 6px;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+.btn-primary:hover, .btn-primary:active,
 .btn-primary:focus-visible {
   background-color: var(--primary-color-hover);
   border-color: var(--primary-color-hover);
-  /* box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-hover), .5); */
+}
+
+.list-button {
+  text-decoration: none;
+  width: 50px;
 }
