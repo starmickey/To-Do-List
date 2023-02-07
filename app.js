@@ -103,34 +103,42 @@ app.get("/", function (req, res) {
 
 app.get("/list", function (req, res) {
 
-  // if (actualUserDTO === undefined) {
-  //   res.redirect("/login");
+  if (actualUserDTO === undefined) {
+    res.redirect("/login");
 
-  // } else if (actualUserDTO.status !== LogInStatus.loggedin) {
-  //   res.redirect("/login");
+  } else if (actualUserDTO.status !== LogInStatus.loggedin) {
+    res.redirect("/login");
 
-  // } else {
+  } else if (req.query.q === "newList") {
+    actualListDTO = mongoose.createListDTO("new list", actualUserDTO.id, new Date(), []);
+    mongoose.saveList(actualListDTO).then(function (listDTO) {
+      actualListDTO = listDTO;
+      res.render("list", { list: actualListDTO });
+    });
+
+
+  } else {
 
     mongoose.getListById(req.query.id).then(function (foundList) {
       if (foundList === null) {
-        foundList = mongoose.createListDTO(reqListName, actualUserDTO.id, new Date(), []);
-        mongoose.saveList(foundList);
+        res.render("listnotfound");
+      } else {
+
+        let itemUIs = [];
+
+        actualListDTO = foundList;
+  
+        foundList.items.forEach(item => {
+          itemUIs.push(new ItemUI(item.id, item.name));
+        });
+  
+        const listUI = new ListUI(foundList.id, foundList.name, itemUIs);
+  
+        res.render("list", { list: listUI });
       }
 
-      let itemUIs = [];
-
-      actualListDTO = foundList;
-
-      foundList.items.forEach(item => {
-        itemUIs.push(new ItemUI(item.id, item.name));
-      });
-
-      const listUI = new ListUI(foundList.id, foundList.name, itemUIs);
-
-      res.render("list", { list: listUI });
-
     });
-  // }
+  }
 
 });
 
