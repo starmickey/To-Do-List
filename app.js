@@ -2,7 +2,7 @@
 
 const express = require("express");
 const bodyParser = require("body-parser");
-const { LogInStatus } = require("./mongooseInterface");
+const { LogInStatus, DTOStatus } = require("./mongooseInterface");
 const mongoose = require(__dirname + "/mongooseInterface.js");
 const lodash = require("lodash");
 
@@ -116,7 +116,6 @@ app.get("/list", function (req, res) {
       res.render("list", { list: actualListDTO });
     });
 
-
   } else {
 
     mongoose.getListById(req.query.id).then(function (foundList) {
@@ -145,7 +144,11 @@ app.get("/list", function (req, res) {
 
 app.post("/list", function (req, res) {
 
-  if (req.query.action === 'addItem') {
+  if (req.query.action === 'changeTitle') {
+    actualListDTO.name = req.body.listTitle;
+    actualListDTO.status = DTOStatus.modified;
+
+  } else if (req.query.action === 'addItem') {
     const newItemDTO = mongoose.createItemDTO(req.body.itemName);
     actualListDTO = mongoose.addItemDTOToListDTO(actualListDTO, newItemDTO);
 
@@ -159,7 +162,6 @@ app.post("/list", function (req, res) {
   mongoose.saveList(actualListDTO).then(function (listDTO) {
     actualListDTO = listDTO;
   });
-
 
   res.redirect("/list?id=" + req.query.id);
 

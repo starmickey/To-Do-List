@@ -3,7 +3,13 @@
 
 
 <div class="box heading-box" id="main-heading">
-  <h1 class="heading"> <%= list.name %> </h1>
+  <h1 class="heading" id="listHeading"> <%= list.name %> </h1>
+  <div id="changeTitleForm" hidden>
+    <form action="/list?id=<%= list.id %>&action=changeTitle " method="post">
+      <input type="text" name="listTitle" placeholder=" <%= list.name %> " autocomplete="off" class="heading" id="changeTitleInput">
+      <button class="btn btn-outline-light" type="submit" name="list">→</button>
+    </form>
+  </div>
 </div>
 
 <div class="box list-box">
@@ -22,5 +28,15 @@
     <button class="list-button" type="submit" name="list">+</button>
   </form>
 </div>
+
+<script>
+  const heading = document.getElementById('listHeading');
+  const changeTitleForm = document.getElementById('changeTitleForm');
+
+  heading.addEventListener('click', function () {
+    changeTitleForm.removeAttribute('hidden');
+    heading.setAttribute('hidden','hidden');
+  })
+</script>
 
 <%- include("partials/footer") -%>
