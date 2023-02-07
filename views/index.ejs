@@ -1,1 +1,15 @@
-<h1> index </h1>
+<%- include("partials/header") -%>
+
+<% if (isLoggedIn) { %>
+<%- include("partials/navbar-loggedin") -%>
+
+<% } else { %>
+<%- include("partials/navbar-start") -%>
+
+<% } %>
+
+<h2>This is the INDEX page</h2>
+
+<p>jkhkjshjks dhfjkh sjkdfh sjkdf jksdfhjksfhjks dhjfk sjkdfjksdfhjkshdfjk sdjkf sjkdf jksd fjks djfkhsjkdf hsjkd fhs</p>
+
+<%- include("partials/footer") -%>

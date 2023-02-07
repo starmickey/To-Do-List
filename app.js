@@ -42,7 +42,15 @@ let actualListDTO;
 /* ====== APP EVENTS' HANDLERS ====== */
 
 app.get("/index", function (req, res) {
-  res.render("index");
+  let isLoggedIn = false;
+
+  if (actualUserDTO !== undefined) {
+    if (actualUserDTO.status === LogInStatus.loggedin) {
+      isLoggedIn = true;
+    }
+  }
+  
+  res.render("index", {isLoggedIn: isLoggedIn});
 });
 
 app.get("/login", function (req, res) {
@@ -150,7 +158,15 @@ app.post("/list", function (req, res) {
 });
 
 app.get("/about", function (req, res) {
-  res.render("about");
+  let isLoggedIn = false;
+
+  if (actualUserDTO !== undefined) {
+    if (actualUserDTO.status === LogInStatus.loggedin) {
+      isLoggedIn = true;
+    }
+  }
+
+  res.render("about", {isLoggedIn: isLoggedIn});
 });
 
 app.listen(3000, function () {
