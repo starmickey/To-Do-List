@@ -41,6 +41,10 @@ let actualListDTO;
 
 /* ====== APP EVENTS' HANDLERS ====== */
 
+app.get("/index", function (req, res) {
+  res.render("index");
+});
+
 app.get("/login", function (req, res) {
   res.render("login", { message: '' });
 })
@@ -54,6 +58,10 @@ app.post("/login", function (req, res) {
       res.redirect("/");
     }
   });
+});
+
+app.get("/signup", function (req, res) {
+  res.render("signup");
 });
 
 app.get("/", function (req, res) {
