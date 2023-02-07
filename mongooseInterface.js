@@ -24,7 +24,6 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    email: String,
     rmDate: {
         type: Date,
         default: null
@@ -84,13 +83,15 @@ const DTOStatus = {
 exports.DTOStatus = DTOStatus;
 
 
-const LogInStatus = {
+const UserStatus = {
     loggedin: 0,
     userNotFound: 1,
-    error: 2
+    error: 2,
+    signupError: 3,
+    signingUpExistingUser: 4
 }
 
-exports.LogInStatus = LogInStatus;
+exports.UserStatus = UserStatus;
 
 
 
@@ -209,21 +210,44 @@ function getUser(name, password) {
 
             if (error) {
                 console.log('log in error');
-                resolve(new UserDTO('', name, LogInStatus.error));
+                resolve(new UserDTO('', name, UserStatus.error));
 
             } else if (user === null) {
                 console.log('log in error: user not found');
-                resolve(new UserDTO('', name, LogInStatus.userNotFound));
+                resolve(new UserDTO('', name, UserStatus.userNotFound));
 
             } else {
                 console.log('log in successfull');
-                resolve(new UserDTO(user.id, user.name, LogInStatus.loggedin));
+                resolve(new UserDTO(user.id, user.name, UserStatus.loggedin));
 
             }
         })
     });
 }
 
+
+function createUser(name, password){
+
+    return new Promise((resolve, reject) => {
+        User.findOne({name: name}, function (error, user) {
+            if(error){
+                resolve(new UserDTO('', '', UserStatus.signupError));
+
+            } else if (user !== null){
+                console.log("user already created");
+                resolve(new UserDTO('', '', UserStatus.signingUpExistingUser));
+
+            } else {
+                const newUser = new User({name: name, password: password});
+                newUser.save().then(function (user) {
+                    resolve(new UserDTO(user.id, user.name, UserStatus.loggedin));
+                })
+
+            }
+        })
+        
+    })
+}
 
 
 function getAllUserLists(userDTO) {
@@ -328,6 +352,7 @@ function saveList(listDTO) {
 /* Exports */
 
 exports.getUser = getUser;
+exports.createUser = createUser;
 exports.getAllUserLists = getAllUserLists;
 exports.getListById = getListById;
 exports.saveList = saveList;
@@ -526,7 +551,7 @@ exports.getStringDate = getStringDate;
 
 
 // getUser('test', 'test').then(function (userDTO) {
-//     if (userDTO.status === LogInStatus.loggedin) {
+//     if (userDTO.status === UserStatus.loggedin) {
 //         let listDTO = createListDTO('testList4', userDTO.id, new Date(), []);
 //         listDTO = addItemDTOToListDTO(listDTO, createItemDTO('pear'));
 //         listDTO = addItemDTOToListDTO(listDTO, createItemDTO('pear'));
@@ -547,5 +572,13 @@ exports.getStringDate = getStringDate;
         // });
     // }
 // }); 
+
+// const newUser = new User('test1', 'test1');
+
+
+
+// createUser('test2','starmickey').then(function (user) {
+    // console.log(user);
+// })
 
 

@@ -2,7 +2,7 @@
 
 const express = require("express");
 const bodyParser = require("body-parser");
-const { LogInStatus, DTOStatus } = require("./mongooseInterface");
+const { UserStatus, DTOStatus } = require("./mongooseInterface");
 const mongoose = require(__dirname + "/mongooseInterface.js");
 const lodash = require("lodash");
 
@@ -45,7 +45,7 @@ app.get("/index", function (req, res) {
   let isLoggedIn = false;
 
   if (actualUserDTO !== undefined) {
-    if (actualUserDTO.status === LogInStatus.loggedin) {
+    if (actualUserDTO.status === UserStatus.loggedin) {
       isLoggedIn = true;
     }
   }
@@ -59,7 +59,7 @@ app.get("/login", function (req, res) {
 
 app.post("/login", function (req, res) {
   mongoose.getUser(req.body.userName, req.body.password).then(function (userDTO) {
-    if (userDTO.status === LogInStatus.userNotFound || userDTO.status === LogInStatus.error) {
+    if (userDTO.status === UserStatus.userNotFound || userDTO.status === UserStatus.error) {
       res.render("login", { message: 'something went wrong, try again' });
     } else {
       actualUserDTO = userDTO;
@@ -77,7 +77,7 @@ app.get("/", function (req, res) {
   if (actualUserDTO === undefined) {
     res.redirect("/login");
 
-  } else if (actualUserDTO.status !== LogInStatus.loggedin) {
+  } else if (actualUserDTO.status !== UserStatus.loggedin) {
     res.redirect("/login");
 
   } else {
@@ -106,7 +106,7 @@ app.get("/list", function (req, res) {
   if (actualUserDTO === undefined) {
     res.redirect("/login");
 
-  } else if (actualUserDTO.status !== LogInStatus.loggedin) {
+  } else if (actualUserDTO.status !== UserStatus.loggedin) {
     res.redirect("/login");
 
   } else if (req.query.q === "newList") {
@@ -181,7 +181,7 @@ app.get("/about", function (req, res) {
   let isLoggedIn = false;
 
   if (actualUserDTO !== undefined) {
-    if (actualUserDTO.status === LogInStatus.loggedin) {
+    if (actualUserDTO.status === UserStatus.loggedin) {
       isLoggedIn = true;
     }
   }
