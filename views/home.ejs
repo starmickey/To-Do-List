@@ -23,7 +23,7 @@
           <ul class="dropdown-menu">
             <li>
               <form action="/list?id=<%= list.id %>&action=removeList " method="post">
-                <input type="hidden" name="removeList" value="removeList" /> 
+                <input type="hidden" name="removeList" value="removeList" />
                 <a class="dropdown-item" onclick="this.parentNode.submit();">Remove List</a>
               </form>
           </ul>
@@ -39,8 +39,11 @@
         <div class="item">
 
           <p>
-
+            <% if (item.name.length > 70) { %>
+            <%= item.name.slice(0,50) + "..." %>
+            <% } else { %>
             <%= item.name %>
+            <% } %>
 
           </p>
 
