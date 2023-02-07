@@ -12,26 +12,42 @@
     <% lists.forEach(list=> { %>
 
     <div class="col-lg-4 col-md-6 col-sm-12 px-4">
-      <a class="list-button" href="/list?id=<%= list.id %> " role="button">
-        <div class="box heading-box">
+      <div class="box heading-box d-flex justify-content-end">
+        <div class="flex-grow-1" onclick="location.href = '/list?id=<%= list.id %> ';">
           <h2 class="heading"> <%= list.name %> </h2>
         </div>
-
-        <div class="box list-box">
-
-          <% let index=0 %>
-          <% while (index < list.items.length && index < 3) { %>
-
-          <% let item=list.items[index] %>
-          <div class="item">
-            <p>
-              <%= item.name %>
-            </p>
-          </div>
-          <% index++ %>
-          <% } %>
+        <div class="dropdown ">
+          <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            +
+          </button>
+          <ul class="dropdown-menu">
+            <li>
+              <form action="/list?id=<%= list.id %>&action=removeList " method="post">
+                <input type="hidden" name="removeList" value="removeList" /> 
+                <a class="dropdown-item" onclick="this.parentNode.submit();">Remove List</a>
+              </form>
+          </ul>
         </div>
-      </a>
+      </div>
+
+      <div class="box list-box" onclick="location.href = '/list?id=<%= list.id %> ';">
+
+        <% let index=0 %>
+        <% while (index < list.items.length && index < 3) { %>
+
+        <% let item=list.items[index] %>
+        <div class="item">
+
+          <p>
+
+            <%= item.name %>
+
+          </p>
+
+        </div>
+        <% index++ %>
+        <% } %>
+      </div>
     </div>
 
     <% }) %>
