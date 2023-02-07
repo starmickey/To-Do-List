@@ -40,6 +40,7 @@ footer {
   font-family: 'Karla', sans-serif;
   font-weight: 800;
   margin: 50px auto;
+  min-height: 86px;
 }
 
 .heading {
@@ -99,7 +100,7 @@ p {
 /* --------- Inputs --------- */
 
 form {
-  margin: 10px;
+  margin: auto 10px;
   text-align: center;
 }
 
@@ -130,6 +131,11 @@ input:checked+p {
 
 input[type="checkbox"] {
   margin: 20px;
+}
+
+#changeTitleInput {
+  width: 313px;
+  color: white;
 }
 
 
