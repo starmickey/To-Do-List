@@ -209,15 +209,12 @@ function getUser(name, password) {
         User.findOne({ name: name, password: password, rmDate: null }, function (error, user) {
 
             if (error) {
-                console.log('log in error');
                 resolve(new UserDTO('', name, UserStatus.error));
 
             } else if (user === null) {
-                console.log('log in error: user not found');
                 resolve(new UserDTO('', name, UserStatus.userNotFound));
 
             } else {
-                console.log('log in successfull');
                 resolve(new UserDTO(user.id, user.name, UserStatus.loggedin));
 
             }
@@ -234,14 +231,11 @@ function createUser(name, password){
                 resolve(new UserDTO('', '', UserStatus.signupError));
 
             } else if (user !== null){
-                console.log("user already created");
                 resolve(new UserDTO('', '', UserStatus.signingUpExistingUser));
 
             } else {
                 const newUser = new User({name: name, password: password});
                 newUser.save().then(function (user) {
-                    console.log('user created');
-                    console.log(user);
                     resolve(new UserDTO(user.id, user.name, UserStatus.loggedin));
                 })
 
@@ -259,22 +253,17 @@ function getAllUserLists(userDTO) {
         User.findOne({ _id: userDTO.id, rmDate: null }, function (userError, user) {
 
             if (userError) {
-                console.log('finding user error');
                 reject(userError);
 
             } else if (user === null) {
-                console.log('finding user error: user not found');
                 reject('user ' + userDTO.name + 'not found');
 
             } else {
                 const listDTOs = [];
 
-                console.log('finding user success: ' + user.name);
-
                 List.find({ user: user, rmDate: null }, function (listError, lists) {
 
                     if (listError) {
-                        console.log('finding list error');
                         reject(listError);
 
                     } else {
@@ -305,11 +294,9 @@ function getListById(listId) {
         List.find({ _id: listId, rmDate: null }, function (listError, lists) {
 
             if (listError) {
-                console.log('finding list error');
                 reject(listError);
 
             } else if (lists.length === 0) {
-                console.log("list " + listName + " not found");
                 resolve(null);
 
             } else {
@@ -330,19 +317,16 @@ function saveList(listDTO) {
 
     return new Promise((resolve, reject) => {
         if (listDTO.status === DTOStatus.new) {
-            console.log('creating list');
             createList(listDTO).then(function (listDTO) {
                 resolve(listDTO);
             });
 
         } else if (listDTO.status === DTOStatus.modified) {
-            console.log('modifying list');
             modifyList(listDTO).then(function (listDTO) {
                 resolve(listDTO);
             });
 
         } else if (listDTO.status === DTOStatus.removed) {
-            console.log('removing list');
             removeList(listDTO).then(function (listDTO) {
                 resolve(listDTO);
             });
@@ -371,7 +355,6 @@ function createList(listDTO) {
         User.findOne({ _id: listDTO.userId, rmDate: null }, function (userError, user) {
 
             if (userError) {
-                console.log('finding user error: ');
                 reject(userError);
 
             } else if (user === null) {
@@ -385,12 +368,9 @@ function createList(listDTO) {
                     listDTO.items.forEach(itemDTO => {
                         const item = new Item({ name: itemDTO.name, list: list });
                         item.save().then(function () {
-                            console.log("Item created: " + item.name);
                         });
                     });
 
-                    console.log('list created: ' + list.name);
-                    
                     listToListDTO(list).then(function (listDTO) {
                         resolve(listDTO);
                     });
@@ -411,11 +391,9 @@ function modifyList(listDTO) {
         List.findOne({ _id: listDTO.id, rmDate: null }, function (err, list) {
 
             if (err) {
-                console.log('finding list error');
                 reject(err);
 
             } else if (list === null) {
-                console.log('list not found');
                 reject("list " + listDTO.name + " not found");
 
             } else {
@@ -437,8 +415,6 @@ function modifyList(listDTO) {
                         });
 
                         itemPromises.push(item.save());
-                        console.log('Item created: ' + item.name);
-
 
                     } else if (itemDTO.status === DTOStatus.modified
                         || itemDTO.status === DTOStatus.removed) {
@@ -455,11 +431,9 @@ function modifyList(listDTO) {
 
                                 if (itemDTO.status === DTOStatus.modified) {
                                     item.name = itemDTO.name;
-                                    console.log("item modified: " + item.name);
 
                                 } else if (itemDTO.status === DTOStatus.removed) {
                                     item.rmDate = new Date();
-                                    console.log("item removed: " + item.name);
                                 }
 
                                 itemPromises.push(item.save());
@@ -488,16 +462,13 @@ function removeList(listDTO) {
         List.findOne({ _id: listDTO.id, rmDate: null }, function (err, list) {
 
             if (err) {
-                console.log('finding list error');
                 reject(err);
 
             } else if (list === null) {
-                console.log('list not found');
                 reject("list " + listDTO.name + " not found");
 
             } else {
                 list.rmDate = new Date();
-                console.log("list " + listDTO.name + " successfully removed");
 
                 list.save().then(function () {
                     resolve(null);
@@ -525,62 +496,3 @@ function getStringDate(date) {
 };
 
 exports.getStringDate = getStringDate;
-
-
-
-/* INITIALIZE DATABASE */
-
-// const testUser = new User({name: 'test', password: 'test'});
-// testUser.save();
-
-// const testUser = User.findOne({name: 'test'}, function(err, user){
-//     // console.log(user);
-//     const testList = new List({name: 'listaprueba', date: new Date(), user: user});
-//     testList.save().then(function(list){
-//         console.log(list);
-//     });
-// });
-
-// List.findOne({name: 'listaprueba'}, function(err, list){
-// const testItem = new Item({name: 'testItem2', list: list});
-// testItem.save();
-// })
-
-
-
-
-/* TEST TRANSACTIONS */
-
-
-// getUser('test', 'test').then(function (userDTO) {
-//     if (userDTO.status === UserStatus.loggedin) {
-//         let listDTO = createListDTO('testList4', userDTO.id, new Date(), []);
-//         listDTO = addItemDTOToListDTO(listDTO, createItemDTO('pear'));
-//         listDTO = addItemDTOToListDTO(listDTO, createItemDTO('pear'));
-//         listDTO = addItemDTOToListDTO(listDTO, createItemDTO('orange'));
-//         listDTO = removeItemDTOFromListDTO(listDTO, itemDTO);
-//         console.log(listDTO);
-
-//         // saveList(listDTO).then(function (listDTO) {
-//             // console.log(listDTO);
-//         // });
-
-//         // getAllUserLists(userDTO).then(function(listDTOs){
-//             // console.log(listDTOs);
-//         // });
-
-        // getListById("63dea94872f2e6d223ebc53e").then(function(listDTO){
-                // console.log(listDTO);
-        // });
-    // }
-// }); 
-
-// const newUser = new User('test1', 'test1');
-
-
-
-// createUser('test2','starmickey').then(function (user) {
-    // console.log(user);
-// })
-
-
